@@ -3,10 +3,12 @@ package br.com.convoquei.backend.user.controller;
 
 import br.com.convoquei.backend.user.model.dto.request.CreateUserRequest;
 import br.com.convoquei.backend.user.model.dto.request.LoginRequest;
+import br.com.convoquei.backend.user.model.dto.request.RefreshTokenRequest;
 import br.com.convoquei.backend.user.model.dto.response.TokenResponse;
 import br.com.convoquei.backend.user.model.dto.response.UserResponse;
 import br.com.convoquei.backend.user.services.GenerateTokenUserService;
 import br.com.convoquei.backend.user.services.CreateUserService;
+import br.com.convoquei.backend.user.services.RefreshTokenService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -26,11 +28,16 @@ public class UserAuthController {
     private final CreateUserService CreateUserService;
     private final AuthenticationManager authenticationManager;
     private final GenerateTokenUserService generateTokenUserService;
+    private final RefreshTokenService refreshTokenService;
 
-    public UserAuthController(CreateUserService CreateUserService, AuthenticationManager authenticationManager, GenerateTokenUserService generateTokenUserService) {
+    public UserAuthController(CreateUserService CreateUserService,
+                              AuthenticationManager authenticationManager,
+                              GenerateTokenUserService generateTokenUserService,
+                              RefreshTokenService refreshTokenService) {
         this.CreateUserService = CreateUserService;
         this.authenticationManager = authenticationManager;
         this.generateTokenUserService = generateTokenUserService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @PostMapping("register")
@@ -62,5 +69,16 @@ public class UserAuthController {
         }
 
         return generateTokenUserService.generate(user);
+    }
+
+    @PostMapping("refresh")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Renovar tokens usando um refresh token")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Tokens renovados com sucesso",
+            content = @Content(schema = @Schema(implementation = TokenResponse.class)))
+    })
+    public TokenResponse refresh(@RequestBody @Valid RefreshTokenRequest request) {
+        return refreshTokenService.refresh(request.refreshToken());
     }
 }

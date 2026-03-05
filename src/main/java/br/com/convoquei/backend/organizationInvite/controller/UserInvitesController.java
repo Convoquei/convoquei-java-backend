@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/users/me/invites")
+@RequestMapping("/api/v1/users/me/invites")
 public class UserInvitesController {
 
     private final OrganizationUserInviteService organizationUserInviteService;
@@ -35,23 +35,23 @@ public class UserInvitesController {
         return organizationUserInviteService.listUserInvites(request);
     }
 
-    @PostMapping("/accept")
+    @PostMapping("/{id}/accept")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Aceitar convite de organização")
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "Convite aceito com sucesso")
     })
-    public void acceptInvite(@RequestParam("inviteId") UUID inviteId) {
+    public void acceptInvite(@PathVariable("id") UUID inviteId) {
         organizationUserInviteService.acceptInvite(inviteId);
     }
 
-    @PostMapping("/decline")
+    @PostMapping("/{id}/decline")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Recusar convite de organização")
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "Convite recusado com sucesso")
     })
-    public void declineInvite(@RequestParam("inviteId") UUID inviteId) {
+    public void declineInvite(@PathVariable("id") UUID inviteId) {
         organizationUserInviteService.declineInvite(inviteId);
     }
 }

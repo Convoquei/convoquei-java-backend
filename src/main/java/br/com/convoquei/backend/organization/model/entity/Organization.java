@@ -29,7 +29,7 @@ public class Organization extends BaseEntity {
         this.name = name;
         this.slug = slug;
         this.status = OrganizationStatus.ACTIVE;
-        this.photoUrl = "https://ui-avatars.com/api/?name=" + slug + "&background=1E90FF&size=256";
+        this.photoUrl = "";
 
         for (OrganizationDefaultSystemRole defaultRole : OrganizationDefaultSystemRole.values()) {
             this.roles.add(OrganizationRole.createSystemRole(this, defaultRole));

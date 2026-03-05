@@ -1,6 +1,7 @@
 package br.com.convoquei.backend._shared.security.jwt.service;
 
 import br.com.convoquei.backend._shared.security.jwt.JwtProperties;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -18,11 +19,16 @@ public class JwtService {
     private final JwtProperties props;
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
+    private final JwtDecoder refreshJwtDecoder;
 
-    public JwtService(JwtProperties props, JwtEncoder jwtEncoder, JwtDecoder jwtDecoder) {
+    public JwtService(JwtProperties props,
+                      JwtEncoder jwtEncoder,
+                      JwtDecoder jwtDecoder,
+                      @Qualifier("refreshJwtDecoder") JwtDecoder refreshJwtDecoder) {
         this.props = props;
         this.jwtEncoder = jwtEncoder;
         this.jwtDecoder = jwtDecoder;
+        this.refreshJwtDecoder = refreshJwtDecoder;
     }
 
     public String generateAccessToken(UUID userId, UserDetails principal) {
@@ -70,9 +76,22 @@ public class JwtService {
         return jwtDecoder.decode(stripBearer(token));
     }
 
+    public Jwt decodeRefreshToken(String token) {
+        return refreshJwtDecoder.decode(stripBearer(token));
+    }
+
     public boolean isValid(String token) {
         try {
             jwtDecoder.decode(stripBearer(token));
+            return true;
+        } catch (JwtException ex) {
+            return false;
+        }
+    }
+
+    public boolean isValidRefreshToken(String token) {
+        try {
+            refreshJwtDecoder.decode(stripBearer(token));
             return true;
         } catch (JwtException ex) {
             return false;

@@ -2,7 +2,7 @@ package br.com.convoquei.backend.organizationInvite.controller;
 
 import br.com.convoquei.backend._shared.security.annotation.RequiredOrganizationPermission;
 import br.com.convoquei.backend.organizationInvite.model.dto.request.InviteMemberRequest;
-import br.com.convoquei.backend.organizationInvite.model.dto.response.OrganizationInviteResponse;
+import br.com.convoquei.backend.organizationInvite.model.dto.response.OrganizationInviteDetailsResponse;
 import br.com.convoquei.backend.organizationRole.model.enums.OrganizationPermission;
 import br.com.convoquei.backend.organizationInvite.services.OrganizationInviteService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,10 +29,10 @@ public class OrganizationInviteController {
     @Operation(summary = "Convidar membro para a organização")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Convite enviado com sucesso",
-            content = @Content(schema = @Schema(implementation = OrganizationInviteResponse.class)))
+            content = @Content(schema = @Schema(implementation = OrganizationInviteDetailsResponse.class)))
     })
-    @RequiredOrganizationPermission(OrganizationPermission.INVITE_MEMBERS)
-    public OrganizationInviteResponse inviteMember(@PathVariable UUID organizationId, @RequestBody @Valid InviteMemberRequest request) {
+    @RequiredOrganizationPermission(OrganizationPermission.INVITE_ORGANIZATION_MEMBERS)
+    public OrganizationInviteDetailsResponse inviteMember(@PathVariable UUID organizationId, @RequestBody @Valid InviteMemberRequest request) {
         return organizationInviteService.invite(organizationId, request.email());
     }
 
@@ -41,7 +41,7 @@ public class OrganizationInviteController {
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "Convite revogado com sucesso")
     })
-    @RequiredOrganizationPermission(OrganizationPermission.INVITE_MEMBERS)
+    @RequiredOrganizationPermission(OrganizationPermission.INVITE_ORGANIZATION_MEMBERS)
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
     public void revokeInvite(@PathVariable UUID organizationId, @PathVariable String email) {
         organizationInviteService.revoke(organizationId, email);

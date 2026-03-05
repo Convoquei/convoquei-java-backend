@@ -12,9 +12,11 @@ public final class OrganizationSpec {
 
     public static Specification<Organization> memberUserId(UUID userId) {
         return (root, query, criteriaBuilder) -> {
-            query.distinct(true);
+            //query.distinct(true);
             var members = root.join("members");
             var user = members.join("user");
+
+            query.orderBy(criteriaBuilder.asc(members.get("joinedAt")));
 
             return criteriaBuilder.equal(user.get("id"), userId);
         };

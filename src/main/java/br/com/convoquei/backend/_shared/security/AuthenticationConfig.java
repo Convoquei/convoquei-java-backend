@@ -42,6 +42,7 @@ public class AuthenticationConfig {
     SecurityFilterChain authChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher("/api/v*/auth/**")
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
@@ -53,6 +54,7 @@ public class AuthenticationConfig {
     @Order(2)
     SecurityFilterChain apiChain(HttpSecurity http) throws Exception {
         return http
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth

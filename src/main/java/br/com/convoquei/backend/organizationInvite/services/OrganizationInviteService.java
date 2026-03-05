@@ -2,7 +2,7 @@ package br.com.convoquei.backend.organizationInvite.services;
 
 import br.com.convoquei.backend._shared.exceptions.DomainBusinessRuleException;
 import br.com.convoquei.backend._shared.exceptions.DomainConflictException;
-import br.com.convoquei.backend.organizationInvite.model.dto.response.OrganizationInviteResponse;
+import br.com.convoquei.backend.organizationInvite.model.dto.response.OrganizationInviteDetailsResponse;
 import br.com.convoquei.backend.organization.model.entity.Organization;
 import br.com.convoquei.backend.organizationInvite.model.entity.OrganizationInvite;
 import br.com.convoquei.backend.organizationMember.model.entity.OrganizationMember;
@@ -32,7 +32,7 @@ public class OrganizationInviteService {
     }
 
     @Transactional
-    public OrganizationInviteResponse invite(UUID organizationId, String email) {
+    public OrganizationInviteDetailsResponse invite(UUID organizationId, String email) {
         Organization organization = organizationRepository.findById(organizationId)
                 .orElseThrow(() -> new DomainBusinessRuleException("Não foi possível encontrar a organização especificada."));
 
@@ -51,7 +51,7 @@ public class OrganizationInviteService {
 
         organizationInviteRepository.save(invite);
 
-        return OrganizationInviteResponse.buildFromInvite(invite);
+        return OrganizationInviteDetailsResponse.buildFromInvite(invite);
     }
 
     @Transactional

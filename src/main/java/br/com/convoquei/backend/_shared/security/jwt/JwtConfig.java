@@ -4,6 +4,7 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
@@ -31,6 +32,7 @@ public class JwtConfig {
     }
 
     @Bean
+    @Primary
     public JwtDecoder jwtDecoder(SecretKey secretKey, JwtProperties props) {
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(secretKey)
                 .macAlgorithm(MacAlgorithm.HS256)
@@ -49,6 +51,28 @@ public class JwtConfig {
         };
 
         decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(defaults, onlyAccess));
+        return decoder;
+    }
+
+    @Bean(name = "refreshJwtDecoder")
+    public JwtDecoder refreshJwtDecoder(SecretKey secretKey, JwtProperties props) {
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(secretKey)
+                .macAlgorithm(MacAlgorithm.HS256)
+                .build();
+
+        var defaults = JwtValidators.createDefaultWithIssuer(props.getIssuer());
+
+        var onlyRefresh = (OAuth2TokenValidator<Jwt>) jwt -> {
+            String typ = jwt.getClaimAsString("typ");
+            if (!"refresh".equals(typ)) {
+                return OAuth2TokenValidatorResult.failure(
+                        new OAuth2Error("invalid_token", "Apenas refresh token é aceito.", null)
+                );
+            }
+            return OAuth2TokenValidatorResult.success();
+        };
+
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(defaults, onlyRefresh));
         return decoder;
     }
 }

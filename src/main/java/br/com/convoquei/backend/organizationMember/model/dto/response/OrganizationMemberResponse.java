@@ -1,5 +1,6 @@
 package br.com.convoquei.backend.organizationMember.model.dto.response;
 
+import br.com.convoquei.backend.organizationGroup.model.dto.response.MemberGroupSummaryResponse;
 import br.com.convoquei.backend.organizationMember.model.entity.OrganizationMember;
 import br.com.convoquei.backend.organizationMember.model.enums.OrganizationMemberStatus;
 import br.com.convoquei.backend.organizationRole.model.enums.OrganizationPermission;
@@ -16,9 +17,14 @@ public record OrganizationMemberResponse(
         OrganizationMemberStatus status,
         OffsetDateTime joinedAt,
         OffsetDateTime leftAt,
-        List<OrganizationMemberPermissionResponse> permissions
+        List<OrganizationMemberPermissionResponse> permissions,
+        List<MemberGroupSummaryResponse> groups
 ) {
     public static OrganizationMemberResponse buildFromMember(OrganizationMember member) {
+        return buildFromMember(member, List.of());
+    }
+
+    public static OrganizationMemberResponse buildFromMember(OrganizationMember member, List<MemberGroupSummaryResponse> groups) {
         List<OrganizationMemberPermissionResponse> permissions = member.getPermissions().stream()
                 .sorted(Comparator.comparingLong(OrganizationPermission::mask).reversed())
                 .map(OrganizationMemberPermissionResponse::buildFromPermission)
@@ -31,7 +37,8 @@ public record OrganizationMemberResponse(
                 member.getStatus(),
                 member.getJoinedAt(),
                 member.getLeftAt(),
-                permissions
+                permissions,
+                groups
         );
     }
 }

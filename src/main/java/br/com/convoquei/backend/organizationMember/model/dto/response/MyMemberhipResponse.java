@@ -6,6 +6,7 @@ import br.com.convoquei.backend.user.model.entity.User;
 import java.util.List;
 
 public record MyMemberhipResponse(
+        String id,
         String name,
         String avatarUrl,
         String status,
@@ -19,6 +20,6 @@ public record MyMemberhipResponse(
                 .map(OrganizationMemberPermissionResponse::buildFromPermission)
                 .toList();
 
-        return new MyMemberhipResponse(user.getName(), user.getAvatarUrl(), member.getStatus().name(), member.isOwner(), permissions);
+        return new MyMemberhipResponse(member.getId().toString(), user.getName(), user.getAvatarUrl(), member.getStatus().name(), member.isOwner(), permissions);
     }
 }

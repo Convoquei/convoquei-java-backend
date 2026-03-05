@@ -50,6 +50,7 @@ public final class OrganizationMemberSpec {
                 roles.fetch("organizationRole", JoinType.LEFT);
                 query.distinct(true);
             }
+
             return cb.conjunction();
         };
     }
