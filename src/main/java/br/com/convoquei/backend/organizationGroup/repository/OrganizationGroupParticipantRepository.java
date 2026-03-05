@@ -10,6 +10,8 @@ import java.util.UUID;
 public interface OrganizationGroupParticipantRepository extends BaseRepository<OrganizationGroupParticipant, UUID> {
     void deleteAllByOrganizationMemberId(UUID organizationMemberId);
 
+    void deleteAllByOrganizationMemberIdAndOrganizationId(UUID organizationMemberId, UUID organizationId);
+
     @EntityGraph(attributePaths = {"organizationMember", "organizationMember.user"})
     Page<OrganizationGroupParticipant> findAllByOrganizationGroupIdAndOrganizationId(UUID organizationGroupId, UUID organizationId, Pageable pageable);
 

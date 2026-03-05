@@ -3,8 +3,12 @@ import br.com.convoquei.backend._shared.exceptions.DomainBusinessRuleException;
 import br.com.convoquei.backend._shared.exceptions.DomainNotFoundException;
 import br.com.convoquei.backend._shared.model.dto.response.PagedResponse;
 import br.com.convoquei.backend.organizationGroup.model.dto.response.MemberGroupSummaryResponse;
+import br.com.convoquei.backend.organizationGroup.model.entity.OrganizationGroup;
+import br.com.convoquei.backend.organizationGroup.model.entity.OrganizationGroupParticipant;
 import br.com.convoquei.backend.organizationGroup.repository.OrganizationGroupParticipantRepository;
+import br.com.convoquei.backend.organizationGroup.repository.OrganizationGroupRepository;
 import br.com.convoquei.backend.organizationMember.model.dto.request.ListMembersByOrganizationRequest;
+import br.com.convoquei.backend.organizationMember.model.dto.request.UpdateMemberGroupsRequest;
 import br.com.convoquei.backend.organizationMember.model.dto.response.MyMemberhipResponse;
 import br.com.convoquei.backend.organizationMember.model.dto.response.OrganizationMemberResponse;
 import br.com.convoquei.backend.organizationMember.model.entity.OrganizationMember;
@@ -26,11 +30,13 @@ public class OrganizationMemberService {
     private final CurrentUserProvider currentUserProvider;
     private final OrganizationMemberRepository organizationMemberRepository;
     private final OrganizationGroupParticipantRepository organizationGroupParticipantRepository;
+    private final OrganizationGroupRepository organizationGroupRepository;
 
-    public OrganizationMemberService(CurrentUserProvider currentUserProvider, OrganizationMemberRepository organizationMemberRepository, OrganizationGroupParticipantRepository organizationGroupParticipantRepository) {
+    public OrganizationMemberService(CurrentUserProvider currentUserProvider, OrganizationMemberRepository organizationMemberRepository, OrganizationGroupParticipantRepository organizationGroupParticipantRepository, OrganizationGroupRepository organizationGroupRepository) {
         this.currentUserProvider = currentUserProvider;
         this.organizationMemberRepository = organizationMemberRepository;
         this.organizationGroupParticipantRepository = organizationGroupParticipantRepository;
+        this.organizationGroupRepository = organizationGroupRepository;
     }
 
     public MyMemberhipResponse getMembership(UUID organizationId) {
@@ -102,5 +108,40 @@ public class OrganizationMemberService {
         );
 
         return PagedResponse.buildFromPage(page);
+    }
+
+    @Transactional
+    public OrganizationMemberResponse updateMemberGroups(UUID organizationId, UUID memberId, UpdateMemberGroupsRequest request) {
+        OrganizationMember requester = currentUserProvider.requireOrganizationMembership(organizationId);
+        if (!requester.hasPermission(OrganizationPermission.MANAGE_GROUPS))
+            throw new DomainBusinessRuleException("Você não tem permissão para gerenciar grupos desta organização.");
+
+        OrganizationMember member = organizationMemberRepository
+                .findByIdAndOrganizationIdAndStatus(memberId, organizationId, OrganizationMemberStatus.ACTIVE)
+                .orElseThrow(() -> new DomainNotFoundException("Membro não encontrado nessa organização."));
+
+        List<UUID> groupIds = request.groupIds() != null ? request.groupIds() : List.of();
+
+        List<OrganizationGroup> groups = groupIds.isEmpty()
+                ? List.of()
+                : organizationGroupRepository.findAllByIdInAndOrganizationId(groupIds, organizationId);
+
+        if (groups.size() != groupIds.stream().distinct().count())
+            throw new DomainNotFoundException("Um ou mais grupos não foram encontrados nessa organização.");
+
+        organizationGroupParticipantRepository.deleteAllByOrganizationMemberIdAndOrganizationId(memberId, organizationId);
+        organizationGroupParticipantRepository.flush();
+
+        List<OrganizationGroupParticipant> newParticipants = groups.stream()
+                .map(group -> new OrganizationGroupParticipant(group, member.getOrganization(), member))
+                .toList();
+
+        organizationGroupParticipantRepository.saveAll(newParticipants);
+
+        List<MemberGroupSummaryResponse> groupSummaries = groups.stream()
+                .map(g -> new MemberGroupSummaryResponse(g.getId(), g.getName(), g.getEmoji()))
+                .toList();
+
+        return OrganizationMemberResponse.buildFromMember(member, groupSummaries);
     }
 }

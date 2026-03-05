@@ -3,6 +3,7 @@ package br.com.convoquei.backend.organizationMember.controller;
 import br.com.convoquei.backend._shared.model.dto.response.PagedResponse;
 import br.com.convoquei.backend._shared.security.annotation.RequiredOrganizationPermission;
 import br.com.convoquei.backend.organizationMember.model.dto.request.ListMembersByOrganizationRequest;
+import br.com.convoquei.backend.organizationMember.model.dto.request.UpdateMemberGroupsRequest;
 import br.com.convoquei.backend.organizationMember.model.dto.response.MyMemberhipResponse;
 import br.com.convoquei.backend.organizationMember.model.dto.response.OrganizationMemberResponse;
 import br.com.convoquei.backend.organizationMember.services.OrganizationMemberService;
@@ -58,6 +59,21 @@ public class OrganizationMemberController {
     @RequiredOrganizationPermission(OrganizationPermission.KICK_ORGANIZATION_MEMBER)
     public OrganizationMemberResponse kickMemberOfOrganization(@PathVariable UUID organizationId, @PathVariable UUID memberId) {
         return organizationMemberService.kickMemberOfOrganization(organizationId, memberId);
+    }
+
+    @PutMapping("/{memberId}/groups")
+    @Operation(summary = "Atualizar grupos do membro")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Grupos atualizados com sucesso",
+            content = @Content(schema = @Schema(implementation = OrganizationMemberResponse.class)))
+    })
+    @RequiredOrganizationPermission(OrganizationPermission.MANAGE_GROUPS)
+    public OrganizationMemberResponse updateMemberGroups(
+            @PathVariable UUID organizationId,
+            @PathVariable UUID memberId,
+            @RequestBody @Valid UpdateMemberGroupsRequest request
+    ) {
+        return organizationMemberService.updateMemberGroups(organizationId, memberId, request);
     }
 
 }

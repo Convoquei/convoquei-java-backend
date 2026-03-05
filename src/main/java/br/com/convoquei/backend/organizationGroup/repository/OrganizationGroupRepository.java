@@ -6,6 +6,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,6 +19,8 @@ public interface OrganizationGroupRepository extends BaseRepository<Organization
     Page<OrganizationGroup> findAllByOrganizationId(UUID organizationId, Pageable pageable);
 
     Page<OrganizationGroup> findAllByOrganizationIdAndNameContainingIgnoreCase(UUID organizationId, String name, Pageable pageable);
+
+    List<OrganizationGroup> findAllByIdInAndOrganizationId(Collection<UUID> ids, UUID organizationId);
 }
 
 
