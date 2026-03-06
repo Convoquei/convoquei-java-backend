@@ -6,8 +6,8 @@ import br.com.convoquei.backend._shared.security.annotation.RequiredOrganization
 import br.com.convoquei.backend.organizationRole.model.dto.request.CreateOrganizationRoleRequest;
 import br.com.convoquei.backend.organizationRole.model.dto.request.UpdateOrganizationRolePermissionsRequest;
 import br.com.convoquei.backend.organizationRole.model.dto.response.OrganizationPermissionResponse;
-import br.com.convoquei.backend.organizationRole.model.dto.response.OrganizationRoleDetailResponse;
 import br.com.convoquei.backend.organizationRole.model.dto.response.OrganizationRoleResponse;
+import br.com.convoquei.backend.organizationRole.model.dto.response.OrganizationRoleMemberResponse;
 import br.com.convoquei.backend.organizationRole.model.enums.OrganizationPermission;
 import br.com.convoquei.backend.organizationRole.services.OrganizationRoleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -60,10 +60,10 @@ public class OrganizationRoleController {
     @Operation(summary = "Obter detalhes de um cargo da organização")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Dados retornados com sucesso",
-            content = @Content(schema = @Schema(implementation = OrganizationRoleDetailResponse.class)))
+            content = @Content(schema = @Schema(implementation = OrganizationRoleResponse.class)))
     })
     @RequiredOrganizationPermission(OrganizationPermission.OWNER)
-    public OrganizationRoleDetailResponse getRole(
+    public OrganizationRoleResponse getRole(
             @PathVariable UUID organizationId,
             @PathVariable UUID roleId) {
         return organizationRoleService.getRole(organizationId, roleId);
@@ -74,23 +74,23 @@ public class OrganizationRoleController {
     @Operation(summary = "Criar cargo na organização")
     @ApiResponses({
         @ApiResponse(responseCode = "201", description = "Cargo criado com sucesso",
-            content = @Content(schema = @Schema(implementation = OrganizationRoleDetailResponse.class)))
+            content = @Content(schema = @Schema(implementation = OrganizationRoleResponse.class)))
     })
     @RequiredOrganizationPermission(OrganizationPermission.OWNER)
-    public OrganizationRoleDetailResponse createRole(
+    public OrganizationRoleResponse createRole(
             @PathVariable UUID organizationId,
             @RequestBody @Valid CreateOrganizationRoleRequest request) {
         return organizationRoleService.createRole(organizationId, request);
     }
 
-    @PatchMapping("/{roleId}/permissions")
+    @PutMapping("/{roleId}/permissions")
     @Operation(summary = "Atualizar permissões de um cargo da organização")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Permissões atualizadas com sucesso",
-            content = @Content(schema = @Schema(implementation = OrganizationRoleDetailResponse.class)))
+            content = @Content(schema = @Schema(implementation = OrganizationRoleResponse.class)))
     })
     @RequiredOrganizationPermission(OrganizationPermission.OWNER)
-    public OrganizationRoleDetailResponse updateRolePermissions(
+    public OrganizationRoleResponse updateRolePermissions(
             @PathVariable UUID organizationId,
             @PathVariable UUID roleId,
             @RequestBody @Valid UpdateOrganizationRolePermissionsRequest request) {
@@ -121,6 +121,7 @@ public class OrganizationRoleController {
             @PathVariable UUID organizationId,
             @PathVariable UUID roleId,
             @PathVariable UUID memberId) {
+
         organizationRoleService.assignRole(organizationId, roleId, memberId);
     }
 
@@ -137,4 +138,20 @@ public class OrganizationRoleController {
             @PathVariable UUID memberId) {
         organizationRoleService.unassignRole(organizationId, roleId, memberId);
     }
+
+    @GetMapping("/{roleId}/members")
+    @Operation(summary = "Listar membros atribuídos a uma role da organização")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso",
+            content = @Content(schema = @Schema(implementation = PagedResponse.class)))
+    })
+    @RequiredOrganizationPermission(OrganizationPermission.MEMBER)
+    public PagedResponse<OrganizationRoleMemberResponse> listRoleMembers(
+            @PathVariable UUID organizationId,
+            @PathVariable UUID roleId,
+            @Valid @ModelAttribute PagedRequest request) {
+
+        return organizationRoleService.listRoleMembers(organizationId, roleId, request);
+    }
+
 }

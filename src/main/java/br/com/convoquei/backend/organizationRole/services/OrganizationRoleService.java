@@ -13,8 +13,8 @@ import br.com.convoquei.backend.organizationMember.repository.OrganizationMember
 import br.com.convoquei.backend.organizationRole.model.dto.request.CreateOrganizationRoleRequest;
 import br.com.convoquei.backend.organizationRole.model.dto.request.UpdateOrganizationRolePermissionsRequest;
 import br.com.convoquei.backend.organizationRole.model.dto.response.OrganizationPermissionResponse;
-import br.com.convoquei.backend.organizationRole.model.dto.response.OrganizationRoleDetailResponse;
 import br.com.convoquei.backend.organizationRole.model.dto.response.OrganizationRoleResponse;
+import br.com.convoquei.backend.organizationRole.model.dto.response.OrganizationRoleMemberResponse;
 import br.com.convoquei.backend.organizationRole.model.entity.OrganizationRole;
 import br.com.convoquei.backend.organizationRole.model.enums.OrganizationDefaultSystemRole;
 import br.com.convoquei.backend.organizationRole.model.enums.OrganizationPermission;
@@ -63,12 +63,12 @@ public class OrganizationRoleService {
         return PagedResponse.buildFromPage(page);
     }
 
-    public OrganizationRoleDetailResponse getRole(UUID organizationId, UUID roleId) {
-        return OrganizationRoleDetailResponse.from(findRole(organizationId, roleId));
+    public OrganizationRoleResponse getRole(UUID organizationId, UUID roleId) {
+        return OrganizationRoleResponse.from(findRole(organizationId, roleId));
     }
 
     @Transactional
-    public OrganizationRoleDetailResponse createRole(UUID organizationId, CreateOrganizationRoleRequest request) {
+    public OrganizationRoleResponse createRole(UUID organizationId, CreateOrganizationRoleRequest request) {
         Organization organization = organizationRepository.findById(organizationId)
                 .orElseThrow(() -> new DomainNotFoundException("Organização não encontrada."));
 
@@ -77,12 +77,12 @@ public class OrganizationRoleService {
         OrganizationRole role = OrganizationRole.createCustomRole(organization, request.name(), permissions);
         organizationRoleRepository.save(role);
 
-        return OrganizationRoleDetailResponse.from(role);
+        return OrganizationRoleResponse.from(role);
     }
 
     @Transactional
-    public OrganizationRoleDetailResponse updateRolePermissions(UUID organizationId, UUID roleId,
-                                                                UpdateOrganizationRolePermissionsRequest request) {
+    public OrganizationRoleResponse updateRolePermissions(UUID organizationId, UUID roleId,
+                                                          UpdateOrganizationRolePermissionsRequest request) {
         OrganizationRole role = findRole(organizationId, roleId);
 
         if (role.isSystem()) {
@@ -93,7 +93,7 @@ public class OrganizationRoleService {
         role.updatePermissions(permissions);
         organizationRoleRepository.save(role);
 
-        return OrganizationRoleDetailResponse.from(role);
+        return OrganizationRoleResponse.from(role);
     }
 
     @Transactional
@@ -145,6 +145,16 @@ public class OrganizationRoleService {
         }
 
         organizationMemberRepository.save(member);
+    }
+
+    public PagedResponse<OrganizationRoleMemberResponse> listRoleMembers(UUID organizationId, UUID roleId, PagedRequest request) {
+        OrganizationRole role = findRole(organizationId, roleId);
+
+        var page = organizationMemberRepository
+                .findActiveByOrganizationIdAndRoleId(organizationId, OrganizationMemberStatus.ACTIVE, role.getId(), request.toPageRequest())
+                .map(OrganizationRoleMemberResponse::buildForMember);
+
+        return PagedResponse.buildFromPage(page);
     }
 
     private OrganizationRole findRole(UUID organizationId, UUID roleId) {

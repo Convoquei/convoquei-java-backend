@@ -1,6 +1,7 @@
 package br.com.convoquei.backend.organization.repository;
 
 import br.com.convoquei.backend._shared.repository.BaseRepository;
+import br.com.convoquei.backend.organizationRole.model.dto.response.OrganizationRoleMemberResponse;
 import br.com.convoquei.backend.organizationRole.model.entity.OrganizationRole;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
