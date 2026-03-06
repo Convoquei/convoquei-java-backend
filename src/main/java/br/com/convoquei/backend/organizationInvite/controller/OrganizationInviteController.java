@@ -31,7 +31,7 @@ public class OrganizationInviteController {
         @ApiResponse(responseCode = "200", description = "Convite enviado com sucesso",
             content = @Content(schema = @Schema(implementation = OrganizationInviteDetailsResponse.class)))
     })
-    @RequiredOrganizationPermission(OrganizationPermission.INVITE_ORGANIZATION_MEMBERS)
+    @RequiredOrganizationPermission(OrganizationPermission.INVITE_MEMBERS)
     public OrganizationInviteDetailsResponse inviteMember(@PathVariable UUID organizationId, @RequestBody @Valid InviteMemberRequest request) {
         return organizationInviteService.invite(organizationId, request.email());
     }
@@ -41,7 +41,7 @@ public class OrganizationInviteController {
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "Convite revogado com sucesso")
     })
-    @RequiredOrganizationPermission(OrganizationPermission.INVITE_ORGANIZATION_MEMBERS)
+    @RequiredOrganizationPermission(OrganizationPermission.INVITE_MEMBERS)
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
     public void revokeInvite(@PathVariable UUID organizationId, @PathVariable String email) {
         organizationInviteService.revoke(organizationId, email);

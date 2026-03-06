@@ -49,7 +49,7 @@ public class OrganizationMemberService {
     public OrganizationMemberResponse kickMemberOfOrganization(UUID organizationId, UUID memberId) {
         OrganizationMember memberAdmin = currentUserProvider.requireOrganizationMembership(organizationId);
 
-        if (!memberAdmin.hasPermission(OrganizationPermission.KICK_ORGANIZATION_MEMBER))
+        if (!memberAdmin.hasPermission(OrganizationPermission.KICK_MEMBERS))
             throw new DomainBusinessRuleException("Voc� n�o tem permiss�o para expulsar membros dessa organiza��o.");
 
         OrganizationMember memberToKick = organizationMemberRepository.findByIdAndOrganizationIdAndStatus(memberId, organizationId, OrganizationMemberStatus.ACTIVE)

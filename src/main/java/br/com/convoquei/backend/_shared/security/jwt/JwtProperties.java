@@ -7,7 +7,7 @@ public class JwtProperties {
 
     private String issuer;
     private String secretBase64;
-    private long accessTokenMinutes = 60;
+    private long accessTokenMinutes = 1;
     private long refreshTokenDays = 30;
 
     public String getIssuer() { return issuer; }

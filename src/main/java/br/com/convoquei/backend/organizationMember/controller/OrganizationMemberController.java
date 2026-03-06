@@ -56,7 +56,7 @@ public class OrganizationMemberController {
         @ApiResponse(responseCode = "200", description = "Membro removido com sucesso",
             content = @Content(schema = @Schema(implementation = OrganizationMemberResponse.class)))
     })
-    @RequiredOrganizationPermission(OrganizationPermission.KICK_ORGANIZATION_MEMBER)
+    @RequiredOrganizationPermission(OrganizationPermission.KICK_MEMBERS)
     public OrganizationMemberResponse kickMemberOfOrganization(@PathVariable UUID organizationId, @PathVariable UUID memberId) {
         return organizationMemberService.kickMemberOfOrganization(organizationId, memberId);
     }
