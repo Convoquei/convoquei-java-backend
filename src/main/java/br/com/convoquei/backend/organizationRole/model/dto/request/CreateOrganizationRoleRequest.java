@@ -8,7 +8,10 @@ import java.util.List;
 
 public record CreateOrganizationRoleRequest(
         @NotBlank @Size(min = 1, max = 80) String name,
-        @NotNull @Size(min = 1) List<String> permissions
+        List<String> permissions
 ) {
+    public CreateOrganizationRoleRequest {
+        if (permissions == null) permissions = List.of();
+    }
 }
 
