@@ -157,3 +157,5 @@ ALTER TABLE organization_role
 ALTER TABLE user_auth_provider
     ADD CONSTRAINT FK_USER_AUTH_PROVIDERS_USER FOREIGN KEY (user_id) REFERENCES users (id);
 
+-- changeset ronal:1771984692121-25
+SET TIMEZONE = 'America/Sao_Paulo';

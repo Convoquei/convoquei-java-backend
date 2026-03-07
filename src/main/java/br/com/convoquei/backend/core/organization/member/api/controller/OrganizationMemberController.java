@@ -2,6 +2,7 @@ package br.com.convoquei.backend.core.organization.member.api.controller;
 
 import br.com.convoquei.backend.app.api.dto.response.PagedResponse;
 import br.com.convoquei.backend.app.security.annotation.RequiredOrganizationPermission;
+import br.com.convoquei.backend.core.organization.function.api.dto.request.UpdateMemberFunctionsRequest;
 import br.com.convoquei.backend.core.organization.member.api.dto.request.ListMembersByOrganizationRequest;
 import br.com.convoquei.backend.core.organization.member.api.dto.request.UpdateMemberGroupsRequest;
 import br.com.convoquei.backend.core.organization.member.api.dto.response.MyMemberhipResponse;
@@ -74,6 +75,21 @@ public class OrganizationMemberController {
             @RequestBody @Valid UpdateMemberGroupsRequest request
     ) {
         return organizationMemberService.updateMemberGroups(organizationId, memberId, request);
+    }
+
+    @PutMapping("/{memberId}/functions")
+    @Operation(summary = "Atualizar funções do membro")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Funções atualizadas com sucesso",
+            content = @Content(schema = @Schema(implementation = OrganizationMemberResponse.class)))
+    })
+    @RequiredOrganizationPermission(OrganizationPermission.MANAGE_FUNCTIONS)
+    public OrganizationMemberResponse updateMemberFunctions(
+            @PathVariable UUID organizationId,
+            @PathVariable UUID memberId,
+            @RequestBody @Valid UpdateMemberFunctionsRequest request
+    ) {
+        return organizationMemberService.updateMemberFunctions(organizationId, memberId, request);
     }
 
 }

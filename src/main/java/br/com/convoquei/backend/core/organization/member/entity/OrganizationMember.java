@@ -10,7 +10,7 @@ import br.com.convoquei.backend.core.organization.role.enums.OrganizationPermiss
 import br.com.convoquei.backend.core.user.entity.User;
 import jakarta.persistence.*;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -34,7 +34,7 @@ public class OrganizationMember extends BaseEntity {
         this.organization = organization;
         this.user = user;
         this.status = OrganizationMemberStatus.ACTIVE;
-        this.joinedAt = OffsetDateTime.now();
+        this.joinedAt = LocalDateTime.now();
         this.leftAt = null;
         this.roles.add(new OrganizationMemberRole(this, findSystemRole(OrganizationDefaultSystemRole.MEMBER)));
     }
@@ -62,11 +62,11 @@ public class OrganizationMember extends BaseEntity {
     @Column(name = "status", length = 30, nullable = false)
     private OrganizationMemberStatus status;
 
-    @Column(name = "joined_at", columnDefinition = "TIMESTAMPTZ")
-    private OffsetDateTime joinedAt;
+    @Column(name = "joined_at")
+    private LocalDateTime joinedAt;
 
-    @Column(name = "left_at", columnDefinition = "TIMESTAMPTZ")
-    private OffsetDateTime leftAt;
+    @Column(name = "left_at")
+    private LocalDateTime leftAt;
 
     public boolean isOwner() {
         return getPermissions().stream().anyMatch(OrganizationPermission::isOwner);
@@ -126,17 +126,17 @@ public class OrganizationMember extends BaseEntity {
         return roles;
     }
 
-    public OffsetDateTime getJoinedAt() {
+    public LocalDateTime getJoinedAt() {
         return joinedAt;
     }
 
-    public OffsetDateTime getLeftAt() {
+    public LocalDateTime getLeftAt() {
         return leftAt;
     }
 
     public void markAsAbandoned() {
         status = OrganizationMemberStatus.ABANDONED;
-        leftAt = OffsetDateTime.now();
+        leftAt = LocalDateTime.now();
 
         keepOnlySystemMemberRole();
     }

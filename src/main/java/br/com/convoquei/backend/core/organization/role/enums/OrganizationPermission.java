@@ -12,8 +12,8 @@ public enum OrganizationPermission {
     MANAGE_EVENT_RECURRENCE(7, "Gerenciar recorrencias", "Criar, editar e remover recorrencias de eventos"), // 128
     MANAGE_EVENT_SCHEDULE(8, "Gerenciar escalas", "Abrir, fechar e editar escalas de participantes nos eventos"), // 256
     MANAGE_ORGANIZATION_SETTINGS(9, "Gerenciar configuracoes", "Alterar nome, foto e configuracoes gerais da organizacao"), // 512
-    MANAGE_SUBSCRIPTION(10, "Gerenciar assinatura", "Alterar plano de assinatura e informacoes de pagamento"); // 1024
-
+    MANAGE_SUBSCRIPTION(10, "Gerenciar assinatura", "Alterar plano de assinatura e informacoes de pagamento"), // 1024
+    MANAGE_FUNCTIONS(11, "Gerenciar funcoes", "Criar, editar, excluir funcoes e gerenciar membros das funcoes"); // 2048
 
     private final int bitIndex;
     private final String title;

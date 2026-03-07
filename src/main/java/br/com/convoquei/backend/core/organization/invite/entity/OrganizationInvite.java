@@ -5,7 +5,7 @@ import br.com.convoquei.backend.core.organization.organization.entity.Organizati
 import br.com.convoquei.backend.core.organization.member.entity.OrganizationMember;
 import jakarta.persistence.*;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(
@@ -24,7 +24,7 @@ public class OrganizationInvite extends BaseEntity {
     public OrganizationInvite(Organization organization, OrganizationMember memberInvite, String invitedEmail) {
         this.organization = organization;
         this.invitedEmail = invitedEmail;
-        this.expiresAt = OffsetDateTime.now().plusDays(7);
+        this.expiresAt = LocalDateTime.now().plusDays(7);
         this.invitedBy = memberInvite;
     }
 
@@ -48,13 +48,13 @@ public class OrganizationInvite extends BaseEntity {
     private String invitedEmail;
 
     @Column(name = "expires_at", nullable = false)
-    private OffsetDateTime expiresAt;
+    private LocalDateTime expiresAt;
 
     public String getInvitedEmail() {
         return invitedEmail;
     }
 
-    public OffsetDateTime getExpiresAt() {
+    public LocalDateTime getExpiresAt() {
         return expiresAt;
     }
 
@@ -67,6 +67,6 @@ public class OrganizationInvite extends BaseEntity {
     }
 
     public boolean isExpired() {
-        return expiresAt.isBefore(OffsetDateTime.now());
+        return expiresAt.isBefore(LocalDateTime.now());
     }
 }

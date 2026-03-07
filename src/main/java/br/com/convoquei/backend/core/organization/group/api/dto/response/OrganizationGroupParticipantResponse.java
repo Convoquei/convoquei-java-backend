@@ -2,7 +2,7 @@ package br.com.convoquei.backend.core.organization.group.api.dto.response;
 
 import br.com.convoquei.backend.core.organization.group.entity.OrganizationGroupParticipant;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record OrganizationGroupParticipantResponse(
@@ -10,7 +10,7 @@ public record OrganizationGroupParticipantResponse(
         UUID memberId,
         String memberName,
         String memberAvatarUrl,
-        OffsetDateTime joinedAt
+        LocalDateTime joinedAt
 ) {
     public static OrganizationGroupParticipantResponse buildFromParticipant(OrganizationGroupParticipant participant) {
         return new OrganizationGroupParticipantResponse(

@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -37,7 +37,7 @@ public class OrganizationUserInviteService {
     public PagedResponse<OrganizationInviteDetailsResponse> listUserInvites(PagedRequest request) {
         User user = currentUserProvider.requireUser();
 
-        Page<OrganizationInviteDetailsResponse> pageResult = organizationInviteRepository.findAllByInvitedEmailIgnoreCaseAndExpiresAtAfter(user.getEmail(), OffsetDateTime.now(), request.toPageRequest());
+        Page<OrganizationInviteDetailsResponse> pageResult = organizationInviteRepository.findAllByInvitedEmailIgnoreCaseAndExpiresAtAfter(user.getEmail(), LocalDateTime.now(), request.toPageRequest());
 
         return PagedResponse.buildFromPage(pageResult);
     }
@@ -64,7 +64,7 @@ public class OrganizationUserInviteService {
 
     private void validateInviteExpiration(OrganizationInvite invite) {
         if (invite.isExpired()) {
-            OffsetDateTime expiresAt = invite.getExpiresAt();
+            LocalDateTime expiresAt = invite.getExpiresAt();
 
             deleteInviteWithNewTransaction(invite.getId());
 

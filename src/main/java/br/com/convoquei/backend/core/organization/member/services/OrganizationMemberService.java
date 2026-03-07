@@ -2,6 +2,12 @@ package br.com.convoquei.backend.core.organization.member.services;
 import br.com.convoquei.backend.sharedkernel.exceptions.DomainBusinessRuleException;
 import br.com.convoquei.backend.sharedkernel.exceptions.DomainNotFoundException;
 import br.com.convoquei.backend.app.api.dto.response.PagedResponse;
+import br.com.convoquei.backend.core.organization.function.api.dto.request.UpdateMemberFunctionsRequest;
+import br.com.convoquei.backend.core.organization.function.api.dto.response.MemberFunctionSummaryResponse;
+import br.com.convoquei.backend.core.organization.function.entity.OrganizationFunction;
+import br.com.convoquei.backend.core.organization.function.entity.OrganizationFunctionMember;
+import br.com.convoquei.backend.core.organization.function.repository.OrganizationFunctionMemberRepository;
+import br.com.convoquei.backend.core.organization.function.repository.OrganizationFunctionRepository;
 import br.com.convoquei.backend.core.organization.group.api.dto.response.MemberGroupSummaryResponse;
 import br.com.convoquei.backend.core.organization.group.entity.OrganizationGroup;
 import br.com.convoquei.backend.core.organization.group.entity.OrganizationGroupParticipant;
@@ -31,12 +37,23 @@ public class OrganizationMemberService {
     private final OrganizationMemberRepository organizationMemberRepository;
     private final OrganizationGroupParticipantRepository organizationGroupParticipantRepository;
     private final OrganizationGroupRepository organizationGroupRepository;
+    private final OrganizationFunctionMemberRepository organizationFunctionMemberRepository;
+    private final OrganizationFunctionRepository organizationFunctionRepository;
 
-    public OrganizationMemberService(CurrentUserProvider currentUserProvider, OrganizationMemberRepository organizationMemberRepository, OrganizationGroupParticipantRepository organizationGroupParticipantRepository, OrganizationGroupRepository organizationGroupRepository) {
+    public OrganizationMemberService(
+            CurrentUserProvider currentUserProvider,
+            OrganizationMemberRepository organizationMemberRepository,
+            OrganizationGroupParticipantRepository organizationGroupParticipantRepository,
+            OrganizationGroupRepository organizationGroupRepository,
+            OrganizationFunctionMemberRepository organizationFunctionMemberRepository,
+            OrganizationFunctionRepository organizationFunctionRepository
+    ) {
         this.currentUserProvider = currentUserProvider;
         this.organizationMemberRepository = organizationMemberRepository;
         this.organizationGroupParticipantRepository = organizationGroupParticipantRepository;
         this.organizationGroupRepository = organizationGroupRepository;
+        this.organizationFunctionMemberRepository = organizationFunctionMemberRepository;
+        this.organizationFunctionRepository = organizationFunctionRepository;
     }
 
     public MyMemberhipResponse getMembership(UUID organizationId) {
@@ -67,6 +84,7 @@ public class OrganizationMemberService {
 
         memberToKick.markAsAbandoned();
         organizationGroupParticipantRepository.deleteAllByOrganizationMemberId(memberToKick.getId());
+        organizationFunctionMemberRepository.deleteAllByOrganizationMemberId(memberToKick.getId());
         organizationMemberRepository.save(memberToKick);
 
         return OrganizationMemberResponse.buildFromMember(memberToKick);
@@ -100,10 +118,26 @@ public class OrganizationMemberService {
                         )
                 ));
 
+        Map<UUID, List<MemberFunctionSummaryResponse>> functionsByMemberId = organizationFunctionMemberRepository
+                .findAllByOrganizationMemberIdIn(memberIds)
+                .stream()
+                .collect(Collectors.groupingBy(
+                        f -> f.getOrganizationMember().getId(),
+                        Collectors.mapping(
+                                f -> new MemberFunctionSummaryResponse(
+                                        f.getOrganizationFunction().getId(),
+                                        f.getOrganizationFunction().getName(),
+                                        f.getOrganizationFunction().getEmoji()
+                                ),
+                                Collectors.toList()
+                        )
+                ));
+
         var page = membersPage.map(member ->
                 OrganizationMemberResponse.buildFromMember(
                         member,
-                        groupsByMemberId.getOrDefault(member.getId(), List.of())
+                        groupsByMemberId.getOrDefault(member.getId(), List.of()),
+                        functionsByMemberId.getOrDefault(member.getId(), List.of())
                 )
         );
 
@@ -142,6 +176,41 @@ public class OrganizationMemberService {
                 .map(g -> new MemberGroupSummaryResponse(g.getId(), g.getName(), g.getEmoji()))
                 .toList();
 
-        return OrganizationMemberResponse.buildFromMember(member, groupSummaries);
+        return OrganizationMemberResponse.buildFromMember(member, groupSummaries, List.of());
+    }
+
+    @Transactional
+    public OrganizationMemberResponse updateMemberFunctions(UUID organizationId, UUID memberId, UpdateMemberFunctionsRequest request) {
+        OrganizationMember requester = currentUserProvider.requireOrganizationMembership(organizationId);
+        if (!requester.hasPermission(OrganizationPermission.MANAGE_FUNCTIONS))
+            throw new DomainBusinessRuleException("Você não tem permissão para gerenciar funções desta organização.");
+
+        OrganizationMember member = organizationMemberRepository
+                .findByIdAndOrganizationIdAndStatus(memberId, organizationId, OrganizationMemberStatus.ACTIVE)
+                .orElseThrow(() -> new DomainNotFoundException("Membro não encontrado nessa organização."));
+
+        List<UUID> functionIds = request.functionIds() != null ? request.functionIds() : List.of();
+
+        List<OrganizationFunction> functions = functionIds.isEmpty()
+                ? List.of()
+                : organizationFunctionRepository.findAllByIdInAndOrganizationId(functionIds, organizationId);
+
+        if (functions.size() != functionIds.stream().distinct().count())
+            throw new DomainNotFoundException("Uma ou mais funções não foram encontradas nessa organização.");
+
+        organizationFunctionMemberRepository.deleteAllByOrganizationMemberIdAndOrganizationId(memberId, organizationId);
+        organizationFunctionMemberRepository.flush();
+
+        List<OrganizationFunctionMember> newFunctionMembers = functions.stream()
+                .map(function -> new OrganizationFunctionMember(function, member.getOrganization(), member))
+                .toList();
+
+        organizationFunctionMemberRepository.saveAll(newFunctionMembers);
+
+        List<MemberFunctionSummaryResponse> functionSummaries = functions.stream()
+                .map(f -> new MemberFunctionSummaryResponse(f.getId(), f.getName(), f.getEmoji()))
+                .toList();
+
+        return OrganizationMemberResponse.buildFromMember(member, List.of(), functionSummaries);
     }
 }

@@ -1,6 +1,8 @@
 spring:
   application:
     name: convoquei-backend
+  jackson:
+    time-zone: America/Sao_Paulo
   profiles:
     active: dev
   liquibase:

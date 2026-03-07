@@ -5,7 +5,7 @@ import br.com.convoquei.backend.core.organization.organization.entity.Organizati
 import br.com.convoquei.backend.core.organization.member.entity.OrganizationMember;
 import jakarta.persistence.*;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(
@@ -26,7 +26,7 @@ public class OrganizationGroupParticipant extends BaseEntity {
         this.organizationGroup = organizationGroup;
         this.organization = organization;
         this.organizationMember = member;
-        this.joinedAt = OffsetDateTime.now();
+        this.joinedAt = LocalDateTime.now();
     }
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -53,8 +53,8 @@ public class OrganizationGroupParticipant extends BaseEntity {
     )
     private OrganizationMember organizationMember;
 
-    @Column(name = "joined_at", columnDefinition = "TIMESTAMPTZ")
-    private OffsetDateTime joinedAt;
+    @Column(name = "joined_at")
+    private LocalDateTime joinedAt;
 
     public OrganizationGroup getOrganizationGroup() {
         return organizationGroup;
@@ -68,7 +68,7 @@ public class OrganizationGroupParticipant extends BaseEntity {
         return organizationMember;
     }
 
-    public OffsetDateTime getJoinedAt() {
+    public LocalDateTime getJoinedAt() {
         return joinedAt;
     }
 }

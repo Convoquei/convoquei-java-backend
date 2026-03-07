@@ -1,12 +1,15 @@
 package br.com.convoquei.backend.sharedkernel.model.entity;
 
 import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity {
 
     @Id
@@ -14,39 +17,30 @@ public abstract class BaseEntity {
     @Column(nullable = false, updatable = false)
     protected UUID id;
 
-    @Column(
-            name = "created_at",
-            nullable = false,
-            columnDefinition = "TIMESTAMPTZ DEFAULT now()"
-    )
-    protected OffsetDateTime createdAt = OffsetDateTime.now();
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    protected LocalDateTime createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at")
-    protected OffsetDateTime updatedAt = OffsetDateTime.now();
+    protected LocalDateTime updatedAt;
 
     @PrePersist
-    void beforeCreate() {
-        if (id == null) {
-            id = UUID.randomUUID();
-        }
-
+    protected void beforeCreate() {
         onPrePersist();
     }
 
-    protected void onPrePersist() {
-
-    }
+    protected void onPrePersist() { }
 
     public UUID getId() {
         return id;
     }
 
-    public OffsetDateTime getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public OffsetDateTime getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 }
