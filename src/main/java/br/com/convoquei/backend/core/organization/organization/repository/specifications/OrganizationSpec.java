@@ -1,8 +1,8 @@
 package br.com.convoquei.backend.core.organization.organization.repository.specifications;
 
 import br.com.convoquei.backend.sharedkernel.helpers.SpecHelper;
-import br.com.convoquei.backend.core.organization.organization.model.dto.request.ListOrganizationsByMemberRequest;
-import br.com.convoquei.backend.core.organization.organization.model.entity.Organization;
+import br.com.convoquei.backend.core.organization.organization.api.dto.request.ListOrganizationsByMemberRequest;
+import br.com.convoquei.backend.core.organization.organization.entity.Organization;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.UUID;

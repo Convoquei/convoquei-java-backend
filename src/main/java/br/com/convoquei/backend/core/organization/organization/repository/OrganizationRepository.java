@@ -1,7 +1,7 @@
 package br.com.convoquei.backend.core.organization.organization.repository;
 
 import br.com.convoquei.backend.sharedkernel.repository.BaseRepository;
-import br.com.convoquei.backend.core.organization.organization.model.entity.Organization;
+import br.com.convoquei.backend.core.organization.organization.entity.Organization;
 
 import java.util.UUID;
 

@@ -1,7 +1,7 @@
 package br.com.convoquei.backend.core.organization.group.repository;
 
 import br.com.convoquei.backend.sharedkernel.repository.BaseRepository;
-import br.com.convoquei.backend.core.organization.group.model.entity.OrganizationGroup;
+import br.com.convoquei.backend.core.organization.group.entity.OrganizationGroup;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;

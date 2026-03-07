@@ -1,7 +1,7 @@
 package br.com.convoquei.backend.core.user.services;
 
 import br.com.convoquei.backend.app.security.jwt.service.JwtService;
-import br.com.convoquei.backend.core.user.model.dto.response.TokenResponse;
+import br.com.convoquei.backend.core.user.api.dto.response.TokenResponse;
 import br.com.convoquei.backend.core.user.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;

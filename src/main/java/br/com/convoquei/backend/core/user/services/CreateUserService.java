@@ -1,9 +1,9 @@
 package br.com.convoquei.backend.core.user.services;
 
 import br.com.convoquei.backend.sharedkernel.exceptions.DomainConflictException;
-import br.com.convoquei.backend.core.user.model.dto.request.CreateUserRequest;
-import br.com.convoquei.backend.core.user.model.dto.response.UserResponse;
-import br.com.convoquei.backend.core.user.model.entity.User;
+import br.com.convoquei.backend.core.user.api.dto.request.CreateUserRequest;
+import br.com.convoquei.backend.core.user.api.dto.response.UserResponse;
+import br.com.convoquei.backend.core.user.entity.User;
 import br.com.convoquei.backend.core.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;

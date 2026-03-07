@@ -1,9 +1,9 @@
 package br.com.convoquei.backend.core.organization.member.repository.specifications;
 
 import br.com.convoquei.backend.sharedkernel.helpers.SpecHelper;
-import br.com.convoquei.backend.core.organization.member.model.dto.request.ListMembersByOrganizationRequest;
-import br.com.convoquei.backend.core.organization.member.model.entity.OrganizationMember;
-import br.com.convoquei.backend.core.organization.member.model.entity.OrganizationMemberRole;
+import br.com.convoquei.backend.core.organization.member.api.dto.request.ListMembersByOrganizationRequest;
+import br.com.convoquei.backend.core.organization.member.entity.OrganizationMember;
+import br.com.convoquei.backend.core.organization.member.entity.OrganizationMemberRole;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
 

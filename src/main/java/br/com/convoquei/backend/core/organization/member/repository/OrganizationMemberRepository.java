@@ -1,8 +1,8 @@
 package br.com.convoquei.backend.core.organization.member.repository;
 
 import br.com.convoquei.backend.sharedkernel.repository.BaseRepository;
-import br.com.convoquei.backend.core.organization.member.model.entity.OrganizationMember;
-import br.com.convoquei.backend.core.organization.member.model.enums.OrganizationMemberStatus;
+import br.com.convoquei.backend.core.organization.member.entity.OrganizationMember;
+import br.com.convoquei.backend.core.organization.member.enums.OrganizationMemberStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;

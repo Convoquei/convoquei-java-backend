@@ -1,9 +1,9 @@
 package br.com.convoquei.backend.core.organization.organization.services;
 
 import br.com.convoquei.backend.app.api.dto.response.PagedResponse;
-import br.com.convoquei.backend.core.organization.organization.model.dto.request.ListOrganizationsByMemberRequest;
-import br.com.convoquei.backend.core.organization.organization.model.dto.response.OrganizationResponse;
-import br.com.convoquei.backend.core.organization.organization.model.entity.Organization;
+import br.com.convoquei.backend.core.organization.organization.api.dto.request.ListOrganizationsByMemberRequest;
+import br.com.convoquei.backend.core.organization.organization.api.dto.response.OrganizationResponse;
+import br.com.convoquei.backend.core.organization.organization.entity.Organization;
 import br.com.convoquei.backend.core.organization.organization.repository.OrganizationRepository;
 import br.com.convoquei.backend.core.organization.organization.repository.specifications.OrganizationSpec;
 import br.com.convoquei.backend.core.user.provider.CurrentUserProvider;

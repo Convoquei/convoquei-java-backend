@@ -1,8 +1,8 @@
 package br.com.convoquei.backend.core.organization.invite.repository;
 
 import br.com.convoquei.backend.sharedkernel.repository.BaseRepository;
-import br.com.convoquei.backend.core.organization.invite.model.dto.response.OrganizationInviteDetailsResponse;
-import br.com.convoquei.backend.core.organization.invite.model.entity.OrganizationInvite;
+import br.com.convoquei.backend.core.organization.invite.api.dto.response.OrganizationInviteDetailsResponse;
+import br.com.convoquei.backend.core.organization.invite.entity.OrganizationInvite;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;

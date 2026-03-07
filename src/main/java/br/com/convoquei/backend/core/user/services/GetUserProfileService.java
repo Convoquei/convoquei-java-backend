@@ -1,6 +1,6 @@
 package br.com.convoquei.backend.core.user.services;
 
-import br.com.convoquei.backend.core.user.model.dto.response.UserResponse;
+import br.com.convoquei.backend.core.user.api.dto.response.UserResponse;
 import br.com.convoquei.backend.core.user.provider.CurrentUserProvider;
 import org.springframework.stereotype.Service;
 

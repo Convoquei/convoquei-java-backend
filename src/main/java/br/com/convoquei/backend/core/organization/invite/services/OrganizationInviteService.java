@@ -2,11 +2,11 @@ package br.com.convoquei.backend.core.organization.invite.services;
 
 import br.com.convoquei.backend.sharedkernel.exceptions.DomainBusinessRuleException;
 import br.com.convoquei.backend.sharedkernel.exceptions.DomainConflictException;
-import br.com.convoquei.backend.core.organization.invite.model.dto.response.OrganizationInviteDetailsResponse;
-import br.com.convoquei.backend.core.organization.organization.model.entity.Organization;
-import br.com.convoquei.backend.core.organization.invite.model.entity.OrganizationInvite;
-import br.com.convoquei.backend.core.organization.member.model.entity.OrganizationMember;
-import br.com.convoquei.backend.core.organization.member.model.enums.OrganizationMemberStatus;
+import br.com.convoquei.backend.core.organization.invite.api.dto.response.OrganizationInviteDetailsResponse;
+import br.com.convoquei.backend.core.organization.organization.entity.Organization;
+import br.com.convoquei.backend.core.organization.invite.entity.OrganizationInvite;
+import br.com.convoquei.backend.core.organization.member.entity.OrganizationMember;
+import br.com.convoquei.backend.core.organization.member.enums.OrganizationMemberStatus;
 import br.com.convoquei.backend.core.organization.invite.repository.OrganizationInviteRepository;
 import br.com.convoquei.backend.core.organization.member.repository.OrganizationMemberRepository;
 import br.com.convoquei.backend.core.organization.organization.repository.OrganizationRepository;

@@ -1,9 +1,9 @@
 package br.com.convoquei.backend.core.user.provider;
 
-import br.com.convoquei.backend.core.organization.member.model.entity.OrganizationMember;
-import br.com.convoquei.backend.core.organization.member.model.enums.OrganizationMemberStatus;
+import br.com.convoquei.backend.core.organization.member.entity.OrganizationMember;
+import br.com.convoquei.backend.core.organization.member.enums.OrganizationMemberStatus;
 import br.com.convoquei.backend.core.organization.member.repository.OrganizationMemberRepository;
-import br.com.convoquei.backend.core.user.model.entity.User;
+import br.com.convoquei.backend.core.user.entity.User;
 import br.com.convoquei.backend.core.user.repository.UserRepository;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;

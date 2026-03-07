@@ -1,6 +1,6 @@
 package br.com.convoquei.backend.app.security.annotation;
 
-import br.com.convoquei.backend.core.organization.role.model.enums.OrganizationPermission;
+import br.com.convoquei.backend.core.organization.role.enums.OrganizationPermission;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
