@@ -1,8 +1,8 @@
 package br.com.convoquei.backend.app.security.aspect;
 
 import br.com.convoquei.backend.app.security.annotation.RequiredOrganizationPermission;
-import br.com.convoquei.backend.domain.organization.role.services.OrganizationPermissionService;
-import br.com.convoquei.backend.domain.user.provider.CurrentUserProvider;
+import br.com.convoquei.backend.core.organization.role.services.OrganizationPermissionService;
+import br.com.convoquei.backend.core.user.provider.CurrentUserProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
