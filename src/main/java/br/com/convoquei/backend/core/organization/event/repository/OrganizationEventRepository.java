@@ -5,5 +5,5 @@ import br.com.convoquei.backend.sharedkernel.repository.BaseRepository;
 
 import java.util.UUID;
 
-public interface OrganizationEventRepository extends BaseRepository<OrganizationEvent, UUID> {
+public interface OrganizationEventRepository extends BaseRepository<OrganizationEvent, UUID>, OrganizationEventRepositoryCustom {
 }

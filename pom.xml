@@ -190,6 +190,18 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.liquibase</groupId>
+                <artifactId>liquibase-maven-plugin</artifactId>
+                <version>5.0.1</version>
+                <configuration>
+                    <url>jdbc:postgresql://localhost:5432/convoquei</url>
+                    <username>convoquei</username>
+                    <password>convoquei</password>
+                    <changeLogFile>src/main/resources/db/changelog/db.changelog-master.yaml</changeLogFile>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

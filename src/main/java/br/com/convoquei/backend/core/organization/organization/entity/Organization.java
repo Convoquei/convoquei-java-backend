@@ -1,5 +1,9 @@
 package br.com.convoquei.backend.core.organization.organization.entity;
 
+import br.com.convoquei.backend.core.organization.event.entity.OrganizationEvent;
+import br.com.convoquei.backend.core.organization.event.valueobject.OrganizationEventConfiguration;
+import br.com.convoquei.backend.core.organization.function.entity.OrganizationFunction;
+import br.com.convoquei.backend.core.organization.group.entity.OrganizationGroup;
 import br.com.convoquei.backend.sharedkernel.exceptions.DomainBusinessRuleException;
 import br.com.convoquei.backend.sharedkernel.model.entity.BaseEntity;
 import br.com.convoquei.backend.core.organization.organization.enums.OrganizationStatus;
@@ -11,6 +15,7 @@ import br.com.convoquei.backend.core.organization.role.enums.OrganizationDefault
 import br.com.convoquei.backend.core.user.entity.User;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,6 +68,15 @@ public class Organization extends BaseEntity {
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrganizationInvite> invites = new ArrayList<>();
 
+    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrganizationGroup> groups = new ArrayList<>();
+
+    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrganizationFunction> functions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrganizationEvent> events = new ArrayList<>();
+
     public OrganizationInvite createInvite(OrganizationMember member, String email) {
         if (!member.getOrganization().getId().equals(this.getId()))
             throw new DomainBusinessRuleException("O membro especificado não pertence à organização para criar um convite.");
@@ -74,30 +88,8 @@ public class Organization extends BaseEntity {
         return invite;
     }
 
-
     public List<OrganizationMember> getMembers() {
         return members;
-    }
-
-    private void addOwner(User user) {
-        OrganizationMember member = addMember(user);
-
-        OrganizationRole ownerRole = this.roles.stream()
-                .filter(OrganizationRole::isOwner)
-                .findFirst()
-                .orElseThrow(() -> new DomainBusinessRuleException("A organização não possui uma função de proprietário definida."));
-
-        member.addRole(ownerRole);
-    }
-
-    public OrganizationMember addMember(User user) {
-        if (this.members.stream().anyMatch(m -> m.getUser().getId().equals(user.getId())))
-            throw new DomainBusinessRuleException("O usuário especificado já é membro da organização.");
-
-        OrganizationMember member = new OrganizationMember(this, user);
-        this.members.add(member);
-
-        return member;
     }
 
     public String getName() {
@@ -120,4 +112,32 @@ public class Organization extends BaseEntity {
         return roles;
     }
 
+    public List<OrganizationGroup> getGroups() {
+        return groups;
+    }
+
+    public List<OrganizationFunction> getFunctions() {
+        return functions;
+    }
+
+    private void addOwner(User user) {
+        OrganizationMember member = addMember(user);
+
+        OrganizationRole ownerRole = this.roles.stream()
+                .filter(OrganizationRole::isOwner)
+                .findFirst()
+                .orElseThrow(() -> new DomainBusinessRuleException("A organização não possui uma função de proprietário definida."));
+
+        member.addRole(ownerRole);
+    }
+
+    public OrganizationMember addMember(User user) {
+        if (this.members.stream().anyMatch(m -> m.getUser().getId().equals(user.getId())))
+            throw new DomainBusinessRuleException("O usuário especificado já é membro da organização.");
+
+        OrganizationMember member = new OrganizationMember(this, user);
+        this.members.add(member);
+
+        return member;
+    }
 }

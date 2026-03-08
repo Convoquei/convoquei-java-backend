@@ -1,7 +1,9 @@
 package br.com.convoquei.backend.core.organization.event.entity;
 
+import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventParticipantStatus;
+import br.com.convoquei.backend.core.organization.function.entity.OrganizationFunction;
 import br.com.convoquei.backend.sharedkernel.model.entity.BaseEntity;
-import br.com.convoquei.backend.core.organization.event.enums.EventParticipantAvailabilityStatus;
+import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventParticipantAvailabilityStatus;
 import br.com.convoquei.backend.core.organization.group.entity.OrganizationGroup;
 import br.com.convoquei.backend.core.organization.member.entity.OrganizationMember;
 import jakarta.persistence.*;
@@ -9,9 +11,6 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "organization_event_participant")
 public class OrganizationEventParticipant extends BaseEntity {
-
-    protected OrganizationEventParticipant() {
-    }
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(
@@ -29,6 +28,13 @@ public class OrganizationEventParticipant extends BaseEntity {
     )
     private OrganizationMember member;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "organization_function_id",
+            foreignKey = @ForeignKey(name = "fk_organization_event_participant_function")
+    )
+    private OrganizationFunction function;
+
     @Column(name = "display_name_snapshot", length = 70)
     private String displayNameSnapshot;
 
@@ -36,14 +42,44 @@ public class OrganizationEventParticipant extends BaseEntity {
     private String avatarUrlSnapshot;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "availability_status", length = 20, nullable = false)
-    private EventParticipantAvailabilityStatus availabilityStatus = EventParticipantAvailabilityStatus.NOT_ANSWERED;
+    @Column(name = "status", length = 30, nullable = false)
+    private OrganizationEventParticipantStatus status = OrganizationEventParticipantStatus.PENDING;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "source_group_id",
-            foreignKey = @ForeignKey(name = "fk_event_participant_source_group"),
-            nullable = true
-    )
-    private OrganizationGroup sourceGroup;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "availability_status", length = 30, nullable = false)
+    private OrganizationEventParticipantAvailabilityStatus availabilityStatus = OrganizationEventParticipantAvailabilityStatus.NOT_ANSWERED;
+
+    protected OrganizationEventParticipant() {
+    }
+
+    public OrganizationEventParticipant(OrganizationEvent event, OrganizationMember member, String displayNameSnapshot, String avatarUrlSnapshot) {
+        this.event = event;
+        this.member = member;
+        this.displayNameSnapshot = displayNameSnapshot;
+        this.avatarUrlSnapshot = avatarUrlSnapshot;
+    }
+
+    public OrganizationEvent getEvent() {
+        return event;
+    }
+
+    public OrganizationMember getMember() {
+        return member;
+    }
+
+    public String getDisplayNameSnapshot() {
+        return displayNameSnapshot;
+    }
+
+    public String getAvatarUrlSnapshot() {
+        return avatarUrlSnapshot;
+    }
+
+    public OrganizationEventParticipantAvailabilityStatus getAvailabilityStatus() {
+        return availabilityStatus;
+    }
+
+    public OrganizationEventParticipantStatus getStatus() {
+        return status;
+    }
 }

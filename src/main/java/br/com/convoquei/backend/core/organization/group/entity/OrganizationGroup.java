@@ -40,23 +40,6 @@ public class OrganizationGroup extends BaseEntity {
     @OneToMany(mappedBy = "organizationGroup", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<OrganizationGroupParticipant> participants = new ArrayList<>();
 
-    public void addParticipant(OrganizationMember member) {
-        boolean alreadyIn = participants.stream()
-                .anyMatch(p -> p.getOrganizationMember().getId().equals(member.getId()));
-
-        if (alreadyIn)
-            throw new DomainBusinessRuleException("O membro já pertence a este grupo.");
-
-        this.participants.add(new OrganizationGroupParticipant(this, this.organization, member));
-    }
-
-    public void removeParticipant(UUID participantId) {
-        boolean removed = participants.removeIf(p -> p.getId().equals(participantId));
-
-        if (!removed)
-            throw new DomainBusinessRuleException("Participante não encontrado neste grupo.");
-    }
-
     public void clearParticipants() {
         this.participants.clear();
     }
@@ -75,6 +58,28 @@ public class OrganizationGroup extends BaseEntity {
 
     public List<OrganizationGroupParticipant> getParticipants() {
         return participants;
+    }
+
+    public void addParticipant(OrganizationMember member) {
+        boolean alreadyIn = participants.stream()
+                .anyMatch(p -> p.getOrganizationMember().getId().equals(member.getId()));
+
+        if (alreadyIn)
+            throw new DomainBusinessRuleException("O membro já pertence a este grupo.");
+
+        this.participants.add(new OrganizationGroupParticipant(this, this.organization, member));
+    }
+
+    public void removeParticipant(UUID participantId) {
+        boolean removed = participants.removeIf(p -> p.getId().equals(participantId));
+
+        if (!removed)
+            throw new DomainBusinessRuleException("Participante não encontrado neste grupo.");
+    }
+
+    public boolean hasMemberId(UUID memberId) {
+        return participants.stream()
+                .anyMatch(p -> p.getOrganizationMember().getId().equals(memberId));
     }
 }
 

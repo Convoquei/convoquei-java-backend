@@ -1,6 +1,6 @@
 package br.com.convoquei.backend.core.organization.event.enums;
 
-public enum OrganizationEventAssignmentModeEnum {
+public enum OrganizationEventAssignmentMode {
     MANUAL,
     AUTOMATIC
 }

@@ -40,23 +40,6 @@ public class OrganizationFunction extends BaseEntity {
     @OneToMany(mappedBy = "organizationFunction", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<OrganizationFunctionMember> members = new ArrayList<>();
 
-    public void addMember(OrganizationMember member) {
-        boolean alreadyIn = members.stream()
-                .anyMatch(m -> m.getOrganizationMember().getId().equals(member.getId()));
-
-        if (alreadyIn)
-            throw new DomainBusinessRuleException("O membro já possui esta função.");
-
-        this.members.add(new OrganizationFunctionMember(this, this.organization, member));
-    }
-
-    public void removeMember(UUID memberId) {
-        boolean removed = members.removeIf(m -> m.getOrganizationMember().getId().equals(memberId));
-
-        if (!removed)
-            throw new DomainBusinessRuleException("Membro não encontrado nesta função.");
-    }
-
     public void clearMembers() {
         this.members.clear();
     }
@@ -75,5 +58,27 @@ public class OrganizationFunction extends BaseEntity {
 
     public List<OrganizationFunctionMember> getMembers() {
         return members;
+    }
+
+    public void addMember(OrganizationMember member) {
+        boolean alreadyIn = members.stream()
+                .anyMatch(m -> m.getOrganizationMember().getId().equals(member.getId()));
+
+        if (alreadyIn)
+            throw new DomainBusinessRuleException("O membro já possui esta função.");
+
+        this.members.add(new OrganizationFunctionMember(this, this.organization, member));
+    }
+
+    public void removeMember(UUID memberId) {
+        boolean removed = members.removeIf(m -> m.getOrganizationMember().getId().equals(memberId));
+
+        if (!removed)
+            throw new DomainBusinessRuleException("Membro não encontrado nesta função.");
+    }
+
+    public boolean hasMemberId(UUID memberId) {
+        return members.stream()
+                .anyMatch(m -> m.getOrganizationMember().getId().equals(memberId));
     }
 }
