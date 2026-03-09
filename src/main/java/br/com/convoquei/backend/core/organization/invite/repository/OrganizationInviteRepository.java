@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,7 +18,7 @@ public interface OrganizationInviteRepository extends BaseRepository<Organizatio
     @EntityGraph(attributePaths = {"organization"})
     Optional<OrganizationInvite> findWithOrganizationById(UUID id);
 
-    Page<OrganizationInviteDetailsResponse> findAllByInvitedEmailIgnoreCaseAndExpiresAtAfter(String invitedEmail, LocalDateTime expiresAtAfter, Pageable pageable);
+    Page<OrganizationInviteDetailsResponse> findAllByInvitedEmailIgnoreCaseAndExpiresAtAfter(String invitedEmail, Instant expiresAtAfter, Pageable pageable);
 }
 
 

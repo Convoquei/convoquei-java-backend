@@ -4,7 +4,8 @@ import br.com.convoquei.backend.core.organization.event.api.dto.request.interfac
 import br.com.convoquei.backend.core.organization.event.enums.*;
 import jakarta.validation.constraints.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,11 +39,11 @@ public record CreateCreateOrganizationEventRequest(
 
         @NotNull
         @Future
-        LocalDateTime startDate,
+        Instant startDate,
 
         @NotNull
         @Future
-        LocalDateTime endDate
+        Instant endDate
 
 ) implements CreateOrganizationEventContract {
     public CreateCreateOrganizationEventRequest {

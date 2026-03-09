@@ -2,7 +2,7 @@ package br.com.convoquei.backend.core.organization.function.api.dto.response;
 
 import br.com.convoquei.backend.core.organization.function.entity.OrganizationFunctionMember;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 public record OrganizationFunctionMemberResponse(
@@ -10,7 +10,7 @@ public record OrganizationFunctionMemberResponse(
         UUID memberId,
         String memberName,
         String memberAvatarUrl,
-        LocalDateTime joinedAt
+        Instant joinedAt
 ) {
     public static OrganizationFunctionMemberResponse buildFromFunctionMember(OrganizationFunctionMember functionMember) {
         return new OrganizationFunctionMemberResponse(

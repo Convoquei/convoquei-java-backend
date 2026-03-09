@@ -6,7 +6,7 @@ import br.com.convoquei.backend.core.organization.member.entity.OrganizationMemb
 import br.com.convoquei.backend.core.organization.member.enums.OrganizationMemberStatus;
 import br.com.convoquei.backend.core.organization.role.enums.OrganizationPermission;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -16,8 +16,8 @@ public record OrganizationMemberResponse(
         String userName,
         String userAvatarUrl,
         OrganizationMemberStatus status,
-        LocalDateTime joinedAt,
-        LocalDateTime leftAt,
+        Instant joinedAt,
+        Instant leftAt,
         List<OrganizationMemberPermissionResponse> permissions,
         List<MemberGroupSummaryResponse> groups,
         List<MemberFunctionSummaryResponse> functions

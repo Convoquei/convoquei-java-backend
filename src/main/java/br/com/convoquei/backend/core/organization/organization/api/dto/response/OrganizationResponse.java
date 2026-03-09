@@ -3,7 +3,7 @@ package br.com.convoquei.backend.core.organization.organization.api.dto.response
 import br.com.convoquei.backend.core.organization.organization.entity.Organization;
 import br.com.convoquei.backend.core.organization.organization.enums.OrganizationStatus;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 public record OrganizationResponse(
@@ -13,7 +13,7 @@ public record OrganizationResponse(
         String photoUrl,
         OrganizationStatus status,
         int totalMembers,
-        LocalDateTime createdAt
+        Instant createdAt
 ) {
     public static OrganizationResponse buildFromOrganization(Organization organization) {
         return new OrganizationResponse(

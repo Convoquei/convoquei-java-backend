@@ -14,7 +14,10 @@ import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventS
 import br.com.convoquei.backend.sharedkernel.model.valueobject.RuleResult;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -43,10 +46,10 @@ public class OrganizationEvent extends BaseEntity {
     private OrganizationMember createdBy;
 
     @Column(name = "start_at", nullable = false)
-    private LocalDateTime startAt;
+    private Instant startAt;
 
     @Column(name = "end_at", nullable = false)
-    private LocalDateTime endAt;
+    private Instant endAt;
 
     @Column(name = "allow_assignments", nullable = false)
     private boolean allowAssignments;
@@ -76,8 +79,8 @@ public class OrganizationEvent extends BaseEntity {
             Organization organization,
             OrganizationMember createdBy,
             OrganizationEventConfiguration configuration,
-            LocalDateTime startAt,
-            LocalDateTime endAt
+            Instant startAt,
+            Instant endAt
     ) {
         if (startAt.isAfter(endAt)) {
             throw new DomainBusinessRuleException("A data de início não pode ser posterior à data de término.");
@@ -104,11 +107,11 @@ public class OrganizationEvent extends BaseEntity {
         return status;
     }
 
-    public LocalDateTime getStartAt() {
+    public Instant getStartAt() {
         return startAt;
     }
 
-    public LocalDateTime getEndAt() {
+    public Instant getEndAt() {
         return endAt;
     }
 
@@ -224,5 +227,25 @@ public class OrganizationEvent extends BaseEntity {
         return participants.stream()
                 .filter(p -> memberId.equals(p.getMember().getId()))
                 .findFirst();
+    }
+
+    public Instant getAvailabilityLockAt() {
+        return startAt.minus(
+                configuration.getAvailabilityLockBeforeStartInMinutes(),
+                ChronoUnit.MINUTES
+        );
+    }
+
+    public Duration getTimeUntilAvailabilityLock() {
+        Duration remaining = Duration.between(
+                Instant.now(),
+                getAvailabilityLockAt()
+        );
+
+        return remaining.isNegative() ? Duration.ZERO : remaining;
+    }
+
+    public boolean isAvailabilityLocked() {
+        return getTimeUntilAvailabilityLock().isZero();
     }
 }

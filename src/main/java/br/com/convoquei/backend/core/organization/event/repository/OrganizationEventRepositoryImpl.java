@@ -36,14 +36,16 @@ public class OrganizationEventRepositoryImpl implements OrganizationEventReposit
 
         Root<OrganizationEvent> event = query.from(OrganizationEvent.class);
 
+        // JOIN para filtrar/projetar os dados do membro específico
         Join<OrganizationEvent, OrganizationEventParticipant> memberParticipant =
                 joinMemberParticipant(cb, event, organizationMemberId);
 
+        // LEFT JOIN em todos os participantes para contagem — sem correlação
+        Join<OrganizationEvent, OrganizationEventParticipant> allParticipants =
+                event.join("participants", JoinType.LEFT);
+
         List<Predicate> predicates =
                 buildPredicates(cb, event, memberParticipant, organizationId, filters);
-
-        Subquery<Long> participantsCount =
-                buildParticipantsCountSubquery(query, cb, event);
 
         query.select(
                 cb.construct(
@@ -57,13 +59,32 @@ public class OrganizationEventRepositoryImpl implements OrganizationEventReposit
                         event.get("status"),
                         event.get("configuration").get("availabilityLockBeforeStartInMinutes"),
                         event.get("allowAssignments"),
-                        participantsCount,
+                        // COUNT via expressão condicional — sem SubPlan
+                        cb.count(allParticipants.get("id")),
+                        event.get("configuration").get("assignmentMode"),
                         memberParticipant.get("availabilityStatus"),
                         memberParticipant.get("status")
                 )
         );
 
         query.where(predicates.toArray(new Predicate[0]));
+
+        // GROUP BY necessário porque agora usamos COUNT no SELECT
+        query.groupBy(
+                event.get("id"),
+                event.get("configuration").get("name"),
+                event.get("configuration").get("description"),
+                event.get("configuration").get("location"),
+                event.get("startAt"),
+                event.get("endAt"),
+                event.get("status"),
+                event.get("configuration").get("availabilityLockBeforeStartInMinutes"),
+                event.get("allowAssignments"),
+                event.get("configuration").get("assignmentMode"),
+                memberParticipant.get("availabilityStatus"),
+                memberParticipant.get("status")
+        );
+
         query.orderBy(cb.asc(event.get("startAt")));
 
         TypedQuery<OrganizationEventMemberView> typedQuery =
@@ -121,26 +142,6 @@ public class OrganizationEventRepositoryImpl implements OrganizationEventReposit
         }
 
         return predicates;
-    }
-
-    private Subquery<Long> buildParticipantsCountSubquery(
-            CriteriaQuery<?> query,
-            CriteriaBuilder cb,
-            Root<OrganizationEvent> event
-    ) {
-
-        Subquery<Long> countSub = query.subquery(Long.class);
-
-        Root<OrganizationEventParticipant> p =
-                countSub.from(OrganizationEventParticipant.class);
-
-        countSub.select(cb.count(p));
-
-        countSub.where(
-                cb.equal(p.get("event").get("id"), event.get("id"))
-        );
-
-        return countSub;
     }
 
     private Long executeCountQuery(

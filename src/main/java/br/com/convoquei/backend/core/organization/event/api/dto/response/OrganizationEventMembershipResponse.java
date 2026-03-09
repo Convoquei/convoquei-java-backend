@@ -2,13 +2,16 @@ package br.com.convoquei.backend.core.organization.event.api.dto.response;
 
 import br.com.convoquei.backend.core.organization.event.entity.OrganizationEvent;
 import br.com.convoquei.backend.core.organization.event.entity.OrganizationEventParticipant;
+import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventAssignmentMode;
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventParticipantAvailabilityStatus;
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventParticipantStatus;
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventStatus;
 import br.com.convoquei.backend.core.organization.event.repository.views.OrganizationEventMemberView;
 import br.com.convoquei.backend.core.organization.event.valueobject.OrganizationEventConfiguration;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,12 +20,14 @@ public record OrganizationEventMembershipResponse(
         String name,
         String description,
         String location,
-        LocalDateTime startTime,
-        LocalDateTime endTime,
+        Instant startTime,
+        Instant endTime,
         OrganizationEventStatus status,
-        int availability_lock_before_start_minutes,
-        boolean allow_assignments,
+        int availabilityLockBeforeStartMinutes,
+        long availabilityLockEpochSeconds,
+        boolean allowAssignment,
         int participantsCount,
+        OrganizationEventAssignmentMode assignmentMode,
         OrganizationEventParticipantAvailabilityStatus membershipAvailabilityStatus,
         OrganizationEventParticipantStatus membershipStatus
 ) {
@@ -40,14 +45,20 @@ public record OrganizationEventMembershipResponse(
                 event.getEndAt(),
                 event.getStatus(),
                 configuration.getAvailabilityLockBeforeStartInMinutes(),
+                event.getTimeUntilAvailabilityLock().toSeconds(),
                 event.isAllowAssignments(),
                 event.getParticipants().size(),
+                configuration.getAssignmentMode(),
                 membership.map(OrganizationEventParticipant::getAvailabilityStatus).orElse(null),
                 membership.map(OrganizationEventParticipant::getStatus).orElse(null)
         );
     }
 
     public static OrganizationEventMembershipResponse buildFromEventMembershipView(OrganizationEventMemberView view) {
+        long secondsUntilLock = view.availabilityLockBeforeStartInMinutes() != null
+                ? Instant.now().until(view.startAt().minusSeconds(view.availabilityLockBeforeStartInMinutes() * 60L), ChronoUnit.SECONDS)
+                : 0L;
+
         return new OrganizationEventMembershipResponse(
                 view.id(),
                 view.name(),
@@ -57,10 +68,13 @@ public record OrganizationEventMembershipResponse(
                 view.endAt(),
                 view.status(),
                 view.availabilityLockBeforeStartInMinutes(),
+                secondsUntilLock,
                 view.allowAssignments(),
                 Math.toIntExact(view.participantsCount()),
+                view.assignmentMode(),
                 view.participantEventAvailabilityStatus(),
                 view.participantEventStatus()
         );
     }
+
 }

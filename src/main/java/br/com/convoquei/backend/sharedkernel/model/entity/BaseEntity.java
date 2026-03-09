@@ -5,7 +5,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @MappedSuperclass
@@ -19,11 +19,11 @@ public abstract class BaseEntity {
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    protected LocalDateTime createdAt;
+    protected Instant createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at")
-    protected LocalDateTime updatedAt;
+    protected Instant updatedAt;
 
     @PrePersist
     protected void beforeCreate() {
@@ -36,11 +36,11 @@ public abstract class BaseEntity {
         return id;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
+    public Instant getUpdatedAt() {
         return updatedAt;
     }
 }

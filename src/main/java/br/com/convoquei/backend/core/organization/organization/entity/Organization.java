@@ -1,7 +1,6 @@
 package br.com.convoquei.backend.core.organization.organization.entity;
 
 import br.com.convoquei.backend.core.organization.event.entity.OrganizationEvent;
-import br.com.convoquei.backend.core.organization.event.valueobject.OrganizationEventConfiguration;
 import br.com.convoquei.backend.core.organization.function.entity.OrganizationFunction;
 import br.com.convoquei.backend.core.organization.group.entity.OrganizationGroup;
 import br.com.convoquei.backend.sharedkernel.exceptions.DomainBusinessRuleException;
@@ -15,7 +14,6 @@ import br.com.convoquei.backend.core.organization.role.enums.OrganizationDefault
 import br.com.convoquei.backend.core.user.entity.User;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
