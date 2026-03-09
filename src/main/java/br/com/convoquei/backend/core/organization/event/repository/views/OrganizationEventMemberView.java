@@ -5,8 +5,7 @@ import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventP
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventParticipantStatus;
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventStatus;
 
-import java.time.Instant;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public record OrganizationEventMemberView(
@@ -14,8 +13,8 @@ public record OrganizationEventMemberView(
         String name,
         String description,
         String location,
-        Instant startAt,
-        Instant endAt,
+        OffsetDateTime startAt,
+        OffsetDateTime endAt,
         OrganizationEventStatus status,
         Integer availabilityLockBeforeStartInMinutes,
         Boolean allowAssignments,

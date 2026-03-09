@@ -15,8 +15,7 @@ import br.com.convoquei.backend.sharedkernel.model.valueobject.RuleResult;
 import jakarta.persistence.*;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Optional;
@@ -45,11 +44,11 @@ public class OrganizationEvent extends BaseEntity {
     )
     private OrganizationMember createdBy;
 
-    @Column(name = "start_at", nullable = false)
-    private Instant startAt;
+    @Column(name = "start_at", nullable = false, columnDefinition = "TIMESTAMPTZ")
+    private OffsetDateTime startAt;
 
-    @Column(name = "end_at", nullable = false)
-    private Instant endAt;
+    @Column(name = "end_at", nullable = false, columnDefinition = "TIMESTAMPTZ")
+    private OffsetDateTime endAt;
 
     @Column(name = "allow_assignments", nullable = false)
     private boolean allowAssignments;
@@ -79,8 +78,8 @@ public class OrganizationEvent extends BaseEntity {
             Organization organization,
             OrganizationMember createdBy,
             OrganizationEventConfiguration configuration,
-            Instant startAt,
-            Instant endAt
+            OffsetDateTime startAt,
+            OffsetDateTime endAt
     ) {
         if (startAt.isAfter(endAt)) {
             throw new DomainBusinessRuleException("A data de início não pode ser posterior à data de término.");
@@ -107,11 +106,11 @@ public class OrganizationEvent extends BaseEntity {
         return status;
     }
 
-    public Instant getStartAt() {
+    public OffsetDateTime getStartAt() {
         return startAt;
     }
 
-    public Instant getEndAt() {
+    public OffsetDateTime getEndAt() {
         return endAt;
     }
 
@@ -229,16 +228,13 @@ public class OrganizationEvent extends BaseEntity {
                 .findFirst();
     }
 
-    public Instant getAvailabilityLockAt() {
-        return startAt.minus(
-                configuration.getAvailabilityLockBeforeStartInMinutes(),
-                ChronoUnit.MINUTES
-        );
+    public OffsetDateTime getAvailabilityLockAt() {
+        return startAt.minusMinutes(configuration.getAvailabilityLockBeforeStartInMinutes());
     }
 
     public Duration getTimeUntilAvailabilityLock() {
         Duration remaining = Duration.between(
-                Instant.now(),
+                OffsetDateTime.now(),
                 getAvailabilityLockAt()
         );
 

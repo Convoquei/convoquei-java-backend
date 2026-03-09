@@ -3,13 +3,13 @@ package br.com.convoquei.backend.core.organization.event.api.dto.request;
 import br.com.convoquei.backend.app.api.dto.request.PagedRequest;
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventParticipantStatus;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 public class ListOrganizationEventRequest extends PagedRequest {
     private String name;
-    private Instant startAfter;
-    private Instant startBefore;
+    private OffsetDateTime startAfter;
+    private OffsetDateTime startBefore;
     private List<OrganizationEventParticipantStatus> participantStatus;
 
     public String getName() {
@@ -20,11 +20,11 @@ public class ListOrganizationEventRequest extends PagedRequest {
         this.name = name;
     }
 
-    public Instant getStartAfter() {
+    public OffsetDateTime getStartAfter() {
         return startAfter;
     }
 
-    public Instant getStartBefore() {
+    public OffsetDateTime getStartBefore() {
         return startBefore;
     }
 
@@ -36,11 +36,11 @@ public class ListOrganizationEventRequest extends PagedRequest {
         this.participantStatus = participantStatus;
     }
 
-    public void setStartAfter(Instant startAfter) {
+    public void setStartAfter(OffsetDateTime startAfter) {
         this.startAfter = startAfter;
     }
 
-    public void setStartBefore(Instant startBefore) {
+    public void setStartBefore(OffsetDateTime startBefore) {
         this.startBefore = startBefore;
     }
 }

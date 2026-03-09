@@ -131,7 +131,7 @@ public class OrganizationEventRepositoryImpl implements OrganizationEventReposit
 
         if (filters.startBefore() != null) {
             predicates.add(
-                    cb.lessThanOrEqualTo(event.get("startAt"), filters.startBefore())
+                    cb.lessThan(event.get("startAt"), filters.startBefore())
             );
         }
 

@@ -9,8 +9,7 @@ import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventS
 import br.com.convoquei.backend.core.organization.event.repository.views.OrganizationEventMemberView;
 import br.com.convoquei.backend.core.organization.event.valueobject.OrganizationEventConfiguration;
 
-import java.time.Instant;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,8 +19,8 @@ public record OrganizationEventMembershipResponse(
         String name,
         String description,
         String location,
-        Instant startTime,
-        Instant endTime,
+        OffsetDateTime startTime,
+        OffsetDateTime endTime,
         OrganizationEventStatus status,
         int availabilityLockBeforeStartMinutes,
         long availabilityLockEpochSeconds,
@@ -56,7 +55,7 @@ public record OrganizationEventMembershipResponse(
 
     public static OrganizationEventMembershipResponse buildFromEventMembershipView(OrganizationEventMemberView view) {
         long secondsUntilLock = view.availabilityLockBeforeStartInMinutes() != null
-                ? Instant.now().until(view.startAt().minusSeconds(view.availabilityLockBeforeStartInMinutes() * 60L), ChronoUnit.SECONDS)
+                ? OffsetDateTime.now().until(view.startAt().minusSeconds(view.availabilityLockBeforeStartInMinutes() * 60L), ChronoUnit.SECONDS)
                 : 0L;
 
         return new OrganizationEventMembershipResponse(

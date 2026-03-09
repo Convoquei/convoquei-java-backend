@@ -47,7 +47,7 @@ public class OrganizationInvite extends BaseEntity {
     @Column(name = "invited_email", length = 150, nullable = false)
     private String invitedEmail;
 
-    @Column(name = "expires_at", nullable = false)
+    @Column(name = "expires_at", nullable = false, columnDefinition = "TIMESTAMPTZ")
     private Instant expiresAt;
 
     public String getInvitedEmail() {

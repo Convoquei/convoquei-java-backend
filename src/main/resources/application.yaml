@@ -2,7 +2,7 @@ spring:
   application:
     name: convoquei-backend
   jackson:
-    time-zone: America/Sao_Paulo
+    time-zone: UTC
   profiles:
     active: dev
   liquibase:
@@ -11,6 +11,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
   web:
     resources:
       add-mappings: false

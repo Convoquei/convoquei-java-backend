@@ -53,7 +53,7 @@ public class OrganizationFunctionMember extends BaseEntity {
     )
     private OrganizationMember organizationMember;
 
-    @Column(name = "joined_at")
+    @Column(name = "joined_at", columnDefinition = "TIMESTAMPTZ")
     private Instant joinedAt;
 
     public OrganizationFunction getOrganizationFunction() {
