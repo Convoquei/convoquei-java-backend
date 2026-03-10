@@ -246,6 +246,22 @@ public class OrganizationEvent extends BaseEntity {
         return getTimeUntilAvailabilityLock().isZero();
     }
 
+    public void lockAvailability() {
+        if (status == OrganizationEventStatus.CANCELED) {
+            throw new DomainBusinessRuleException("Não é possível trancar a disponibilidade de um evento cancelado.");
+        }
+        if (status != OrganizationEventStatus.SCHEDULED) {
+            throw new DomainBusinessRuleException("Somente eventos com status SCHEDULED podem ter a disponibilidade travada.");
+        }
+        if (!allowAssignments) {
+            return;
+        }
+
+        this.allowAssignments = false;
+
+        markParticipantsAsResponseExpired();
+    }
+
     public void start() {
         if (status == OrganizationEventStatus.CANCELED) {
             throw new DomainBusinessRuleException("Não é possível iniciar um evento que foi cancelado.");
@@ -278,5 +294,11 @@ public class OrganizationEvent extends BaseEntity {
         this.participants.stream()
                 .filter(p -> p.getStatus() != OrganizationEventParticipantStatus.ASSIGNED)
                 .forEach(p -> p.setStatus(OrganizationEventParticipantStatus.NOT_ASSIGNED));
+    }
+
+    private void markParticipantsAsResponseExpired() {
+        this.participants.stream()
+                .filter(p -> p.getStatus() == OrganizationEventParticipantStatus.PENDING)
+                .forEach(p -> p.setStatus(OrganizationEventParticipantStatus.EXPIRED));
     }
 }

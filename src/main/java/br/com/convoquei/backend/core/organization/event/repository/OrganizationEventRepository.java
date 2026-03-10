@@ -3,6 +3,8 @@ package br.com.convoquei.backend.core.organization.event.repository;
 import br.com.convoquei.backend.core.organization.event.entity.OrganizationEvent;
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventStatus;
 import br.com.convoquei.backend.sharedkernel.repository.BaseRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.OffsetDateTime;
 import java.util.Collection;
@@ -13,4 +15,7 @@ public interface OrganizationEventRepository extends BaseRepository<Organization
     List<OrganizationEvent> findByStatusAndStartAtLessThanEqualAndEndAtGreaterThan(OrganizationEventStatus status, OffsetDateTime now1, OffsetDateTime now2);
 
     List<OrganizationEvent> findByStatusNotInAndEndAtLessThanEqual(Collection<OrganizationEventStatus> statuses, OffsetDateTime now);
+
+    @Query(value = "SELECT * FROM organization_event e WHERE e.status = 'SCHEDULED' AND e.allow_assignments = true AND e.start_at - (e.availability_lock_before_start_in_minutes * interval '1 minute') <= :now", nativeQuery = true)
+    List<OrganizationEvent> findScheduledEventsWithExpiredAvailabilityLock(@Param("now") OffsetDateTime now);
 }

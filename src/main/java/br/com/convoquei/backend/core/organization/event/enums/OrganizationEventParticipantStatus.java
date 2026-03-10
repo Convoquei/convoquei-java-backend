@@ -5,7 +5,8 @@ public enum OrganizationEventParticipantStatus {
     AWAITING_ASSIGNMENT("Aguardando escalação"),
     AWAITING_DRAW("Aguardando sorteio de escalação"),
     ASSIGNED("Escalado"),
-    NOT_ASSIGNED("Não escalado");
+    NOT_ASSIGNED("Não escalado"),
+    EXPIRED("Resposta expirada");
 
     private final String title;
 

@@ -86,4 +86,8 @@ public class OrganizationEventParticipant extends BaseEntity {
     public void setStatus(OrganizationEventParticipantStatus status) {
         this.status = status;
     }
+
+    public void markAsExpired() {
+        this.status = OrganizationEventParticipantStatus.EXPIRED;
+    }
 }
