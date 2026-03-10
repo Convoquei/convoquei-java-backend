@@ -1,8 +1,6 @@
 package br.com.convoquei.backend.core.organization.event.entity;
 
-import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventCallMode;
-import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventFunctionCallMode;
-import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventParticipantStatus;
+import br.com.convoquei.backend.core.organization.event.enums.*;
 import br.com.convoquei.backend.core.organization.event.valueobject.OrganizationEventConfiguration;
 import br.com.convoquei.backend.core.organization.function.entity.OrganizationFunction;
 import br.com.convoquei.backend.core.organization.group.entity.OrganizationGroup;
@@ -11,13 +9,11 @@ import br.com.convoquei.backend.core.organization.member.enums.OrganizationMembe
 import br.com.convoquei.backend.sharedkernel.exceptions.DomainBusinessRuleException;
 import br.com.convoquei.backend.sharedkernel.model.entity.BaseEntity;
 import br.com.convoquei.backend.core.organization.organization.entity.Organization;
-import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventStatus;
 import br.com.convoquei.backend.sharedkernel.model.valueobject.RuleResult;
 import jakarta.persistence.*;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -242,8 +238,12 @@ public class OrganizationEvent extends BaseEntity {
         return remaining.isNegative() ? Duration.ZERO : remaining;
     }
 
+    public OrganizationEventAssignmentMode getAssignmentMode() {
+        return configuration.getAssignmentMode();
+    }
+
     public boolean isAvailabilityLocked() {
-        return getTimeUntilAvailabilityLock().isZero();
+        return !getTimeUntilAvailabilityLock().isZero();
     }
 
     public void lockAvailability() {
@@ -290,6 +290,36 @@ public class OrganizationEvent extends BaseEntity {
         markParticipantsAsNotAssigned();
     }
 
+    public void respondAvailability(UUID memberId, boolean available) {
+        if (!allowAssignments) {
+            throw new DomainBusinessRuleException("Este evento não está aceitando respostas de disponibilidade no momento.");
+        }
+
+        if (status != OrganizationEventStatus.SCHEDULED) {
+            throw new DomainBusinessRuleException("Somente eventos agendados podem aceitar respostas de disponibilidade.");
+        }
+
+        OrganizationEventParticipant participant = findParticipantByMemberId(memberId)
+                .orElseThrow(() -> new DomainBusinessRuleException("Você não é participante deste evento."));
+
+        participant.markAvailability(available);
+
+        processAutomaticAssignmentsIfNeeded(participant);
+    }
+
+    public void clearAvailability(UUID memberId) {
+        if (!allowAssignments) {
+            throw new DomainBusinessRuleException("Este evento não está aceitando respostas de disponibilidade no momento.");
+        }
+
+        OrganizationEventParticipant participant = findParticipantByMemberId(memberId)
+                .orElseThrow(() -> new DomainBusinessRuleException("Você não é participante deste evento."));
+
+        participant.clearAvailability();
+
+        processAutomaticAssignmentsIfNeeded(participant);
+    }
+
     private void markParticipantsAsNotAssigned() {
         this.participants.stream()
                 .filter(p -> p.getStatus() != OrganizationEventParticipantStatus.ASSIGNED)
@@ -300,5 +330,17 @@ public class OrganizationEvent extends BaseEntity {
         this.participants.stream()
                 .filter(p -> p.getStatus() == OrganizationEventParticipantStatus.PENDING)
                 .forEach(p -> p.setStatus(OrganizationEventParticipantStatus.EXPIRED));
+    }
+
+    private void processAutomaticAssignmentsIfNeeded(OrganizationEventParticipant participant) {
+        if (configuration.getAssignmentMode() != OrganizationEventAssignmentMode.AUTOMATIC) {
+            return;
+        }
+
+        if (participant.getAvailabilityStatus() == OrganizationEventParticipantAvailabilityStatus.AVAILABLE) {
+            participant.setStatus(OrganizationEventParticipantStatus.ASSIGNED);
+        } else {
+            participant.setStatus(OrganizationEventParticipantStatus.PENDING);
+        }
     }
 }

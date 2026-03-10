@@ -90,4 +90,14 @@ public class OrganizationEventParticipant extends BaseEntity {
     public void markAsExpired() {
         this.status = OrganizationEventParticipantStatus.EXPIRED;
     }
+
+    public void markAvailability(boolean available) {
+        this.availabilityStatus = available
+                ? OrganizationEventParticipantAvailabilityStatus.AVAILABLE
+                : OrganizationEventParticipantAvailabilityStatus.UNAVAILABLE;
+    }
+
+    public void clearAvailability() {
+        this.availabilityStatus = OrganizationEventParticipantAvailabilityStatus.NOT_ANSWERED;
+    }
 }
