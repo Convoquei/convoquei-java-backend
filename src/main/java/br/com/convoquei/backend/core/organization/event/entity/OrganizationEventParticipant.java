@@ -82,4 +82,8 @@ public class OrganizationEventParticipant extends BaseEntity {
     public OrganizationEventParticipantStatus getStatus() {
         return status;
     }
+
+    public void setStatus(OrganizationEventParticipantStatus status) {
+        this.status = status;
+    }
 }

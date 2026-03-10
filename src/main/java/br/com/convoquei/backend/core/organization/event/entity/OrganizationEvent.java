@@ -2,6 +2,7 @@ package br.com.convoquei.backend.core.organization.event.entity;
 
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventCallMode;
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventFunctionCallMode;
+import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventParticipantStatus;
 import br.com.convoquei.backend.core.organization.event.valueobject.OrganizationEventConfiguration;
 import br.com.convoquei.backend.core.organization.function.entity.OrganizationFunction;
 import br.com.convoquei.backend.core.organization.group.entity.OrganizationGroup;
@@ -243,5 +244,39 @@ public class OrganizationEvent extends BaseEntity {
 
     public boolean isAvailabilityLocked() {
         return getTimeUntilAvailabilityLock().isZero();
+    }
+
+    public void start() {
+        if (status == OrganizationEventStatus.CANCELED) {
+            throw new DomainBusinessRuleException("Não é possível iniciar um evento que foi cancelado.");
+        }
+        if (status != OrganizationEventStatus.SCHEDULED) {
+            throw new DomainBusinessRuleException("Somente eventos com status SCHEDULED podem ser iniciados.");
+        }
+
+        this.allowAssignments = false;
+        this.status = OrganizationEventStatus.IN_PROGRESS;
+
+        markParticipantsAsNotAssigned();
+    }
+
+    public void complete() {
+        if (status == OrganizationEventStatus.CANCELED) {
+            throw new DomainBusinessRuleException("Não é possível finalizar um evento que foi cancelado.");
+        }
+        if (status == OrganizationEventStatus.COMPLETED) {
+            throw new DomainBusinessRuleException("Este evento já está finalizado.");
+        }
+
+        this.allowAssignments = false;
+        this.status = OrganizationEventStatus.COMPLETED;
+
+        markParticipantsAsNotAssigned();
+    }
+
+    private void markParticipantsAsNotAssigned() {
+        this.participants.stream()
+                .filter(p -> p.getStatus() != OrganizationEventParticipantStatus.ASSIGNED)
+                .forEach(p -> p.setStatus(OrganizationEventParticipantStatus.NOT_ASSIGNED));
     }
 }
