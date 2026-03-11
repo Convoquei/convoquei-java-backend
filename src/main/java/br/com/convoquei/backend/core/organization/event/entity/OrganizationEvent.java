@@ -12,6 +12,7 @@ import br.com.convoquei.backend.sharedkernel.exceptions.DomainBusinessRuleExcept
 import br.com.convoquei.backend.sharedkernel.model.entity.BaseEntity;
 import br.com.convoquei.backend.core.organization.organization.entity.Organization;
 import br.com.convoquei.backend.sharedkernel.model.valueobject.RuleResult;
+import br.com.convoquei.backend.core.organization.event.util.OrganizationEventHelper;
 import jakarta.persistence.*;
 
 import java.time.Duration;
@@ -223,12 +224,7 @@ public class OrganizationEvent extends BaseEntity {
     }
 
     public Duration getTimeUntilAvailabilityLock() {
-        Duration remaining = Duration.between(
-                OffsetDateTime.now(),
-                getAvailabilityLockAt()
-        );
-
-        return remaining.isNegative() ? Duration.ZERO : remaining;
+        return Duration.ofSeconds(OrganizationEventHelper.secondsUntilAvailabilityLock(startAt, configuration.getAvailabilityLockBeforeStartInMinutes()));
     }
 
     public void lockAvailability() {

@@ -17,6 +17,10 @@ public interface OrganizationEventRepository extends BaseRepository<Organization
 
     @EntityGraph(attributePaths = {"participants", "participants.member", "calledFunctions", "calledFunctions.function"})
     Optional<OrganizationEvent> findByIdAndOrganizationId(UUID id, UUID organizationId);
+
+    @EntityGraph(attributePaths = {"participants", "participants.function", "calledFunctions", "calledFunctions.function", "calledGroups", "calledGroups.group"})
+    Optional<OrganizationEvent> findFullDetailByIdAndOrganizationId(UUID id, UUID organizationId);
+
     List<OrganizationEvent> findByStatusAndStartAtLessThanEqualAndEndAtGreaterThan(OrganizationEventStatus status, OffsetDateTime now1, OffsetDateTime now2);
 
     List<OrganizationEvent> findByStatusNotInAndEndAtLessThanEqual(Collection<OrganizationEventStatus> statuses, OffsetDateTime now);

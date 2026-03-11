@@ -5,8 +5,10 @@ import br.com.convoquei.backend.app.security.annotation.RequiredOrganizationPerm
 import br.com.convoquei.backend.core.organization.event.api.dto.request.CreateCreateOrganizationEventRequest;
 import br.com.convoquei.backend.core.organization.event.api.dto.request.ListOrganizationEventRequest;
 import br.com.convoquei.backend.core.organization.event.api.dto.request.RespondEventAvailabilityRequest;
+import br.com.convoquei.backend.core.organization.event.api.dto.response.OrganizationEventDetailResponse;
 import br.com.convoquei.backend.core.organization.event.api.dto.response.OrganizationEventMembershipResponse;
 import br.com.convoquei.backend.core.organization.event.services.ClearEventAvailabilityService;
+import br.com.convoquei.backend.core.organization.event.services.GetOrganizationEventDetailService;
 import br.com.convoquei.backend.core.organization.event.services.CreateOrganizationEventService;
 import br.com.convoquei.backend.core.organization.event.services.OrganizationEventMembershipService;
 import br.com.convoquei.backend.core.organization.event.services.RespondEventAvailabilityService;
@@ -25,12 +27,14 @@ public class OrganizationEventController {
     public final OrganizationEventMembershipService organizationEventMembershipService;
     public final RespondEventAvailabilityService respondEventAvailabilityService;
     public final ClearEventAvailabilityService clearEventAvailabilityService;
+    public final GetOrganizationEventDetailService getOrganizationEventDetailService;
 
-    public OrganizationEventController(CreateOrganizationEventService createOrganizationService, OrganizationEventMembershipService organizationEventMembershipService, RespondEventAvailabilityService respondEventAvailabilityService, ClearEventAvailabilityService clearEventAvailabilityService) {
+    public OrganizationEventController(CreateOrganizationEventService createOrganizationService, OrganizationEventMembershipService organizationEventMembershipService, RespondEventAvailabilityService respondEventAvailabilityService, ClearEventAvailabilityService clearEventAvailabilityService, GetOrganizationEventDetailService getOrganizationEventDetailService) {
         this.createOrganizationService = createOrganizationService;
         this.organizationEventMembershipService = organizationEventMembershipService;
         this.respondEventAvailabilityService = respondEventAvailabilityService;
         this.clearEventAvailabilityService = clearEventAvailabilityService;
+        this.getOrganizationEventDetailService = getOrganizationEventDetailService;
     }
 
     @PostMapping
@@ -51,6 +55,14 @@ public class OrganizationEventController {
     @RequiredOrganizationPermission(OrganizationPermission.MEMBER)
     public PagedResponse<OrganizationEventMembershipResponse> listEvents(@PathVariable UUID organizationId, @Valid @ParameterObject ListOrganizationEventRequest request) {
         return organizationEventMembershipService.listEvents(organizationId, request);
+    }
+
+    @GetMapping("/{eventId}/details")
+    @RequiredOrganizationPermission(OrganizationPermission.MANAGE_EVENTS)
+    public OrganizationEventDetailResponse getEventDetail(
+            @PathVariable UUID organizationId,
+            @PathVariable UUID eventId) {
+        return getOrganizationEventDetailService.execute(organizationId, eventId);
     }
 
     @PatchMapping("/{eventId}/availability")

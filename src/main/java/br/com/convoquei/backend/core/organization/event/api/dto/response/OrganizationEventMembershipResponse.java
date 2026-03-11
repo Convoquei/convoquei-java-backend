@@ -5,10 +5,10 @@ import br.com.convoquei.backend.core.organization.event.entity.OrganizationEvent
 import br.com.convoquei.backend.core.organization.event.enums.*;
 import br.com.convoquei.backend.core.organization.event.repository.views.OrganizationEventMemberView;
 import br.com.convoquei.backend.core.organization.event.valueobject.OrganizationEventConfiguration;
+import br.com.convoquei.backend.core.organization.event.util.OrganizationEventHelper;
 import br.com.convoquei.backend.core.organization.function.entity.OrganizationFunction;
 
 import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -76,11 +76,7 @@ public record OrganizationEventMembershipResponse(
                 ? view.availabilityLockBeforeStartInMinutes()
                 : 0;
 
-        long secondsUntilLock = availabilityLockBeforeStartInMinutes > 0
-                ? Math.max(0L, OffsetDateTime.now().until(
-                view.startAt().minusMinutes(view.availabilityLockBeforeStartInMinutes()),
-                ChronoUnit.SECONDS))
-                : 0L;
+        long secondsUntilLock = OrganizationEventHelper.secondsUntilAvailabilityLock(view.startAt(), view.availabilityLockBeforeStartInMinutes());
 
         return new OrganizationEventMembershipResponse(
                 view.id(),
