@@ -4,8 +4,10 @@ import br.com.convoquei.backend.app.config.quartz.ConvoqueiJob;
 import br.com.convoquei.backend.app.config.quartz.ConvoqueiJobHandler;
 import br.com.convoquei.backend.core.organization.event.job.handlers.OrganizationEventAvailabilityDeadlineHandler;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.quartz.DisallowConcurrentExecution;
 import org.springframework.stereotype.Component;
 
+@DisallowConcurrentExecution
 @Component
 public class OrganizationEventAvailabilityDeadlineJob extends ConvoqueiJob {
 

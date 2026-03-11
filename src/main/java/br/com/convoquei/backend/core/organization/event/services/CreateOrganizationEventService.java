@@ -85,19 +85,21 @@ public class CreateOrganizationEventService {
         if (event.getConfiguration().getFunctionCallMode() == null)
             return;
 
-        if (request.calledFunctionIds() == null || request.calledFunctionIds().isEmpty())
+        if (request.calledFunctionIds() != null && request.calledFunctionIds().isEmpty())
             throw new DomainBusinessRuleException("Informe ao menos uma função caso queira utilizar o recurso de convocação por função.");
 
         Organization organization = event.getOrganization();
 
-        request.calledFunctionIds().forEach(requestFunction -> {
-            var function = organization.getFunctions().stream()
-                    .filter(f -> f.getId().equals(requestFunction.id()))
-                    .findFirst()
-                    .orElseThrow(() -> new DomainBusinessRuleException("Uma das funções especificadas para convocação não foi encontrada na organização."));
+        if (request.calledFunctionIds() != null) {
+            request.calledFunctionIds().forEach(requestFunction -> {
+                var function = organization.getFunctions().stream()
+                        .filter(f -> f.getId().equals(requestFunction.id()))
+                        .findFirst()
+                        .orElseThrow(() -> new DomainBusinessRuleException("Uma das funções especificadas para convocação não foi encontrada na organização."));
 
-            event.addCalledFunctions(function, requestFunction.minMembers(), requestFunction.maxMembers(), requestFunction.assignmentMode());
-        });
+                event.addCalledFunctions(function, requestFunction.minMembers(), requestFunction.maxMembers(), requestFunction.assignmentMode());
+            });
+        }
     }
 
     private void addEligibleMembersAsPendingParticipants(Organization organization, OrganizationEvent event) {

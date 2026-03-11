@@ -17,6 +17,8 @@ import jakarta.persistence.*;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Entity
 @Table(name = "organization_event")
@@ -50,7 +52,7 @@ public class OrganizationEvent extends BaseEntity {
     private boolean allowAssignments;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 30)
+    @Column(name = "status", nullable = false, length = 50)
     private OrganizationEventStatus status;
 
     @OneToMany(
@@ -141,13 +143,6 @@ public class OrganizationEvent extends BaseEntity {
     }
 
     public void addCalledFunctions(OrganizationFunction function, int minMembers, Integer maxMembers, OrganizationEventAssignmentMode assignmentMode) {
-
-        if (configuration.getFunctionCallMode() != OrganizationEventFunctionCallMode.ONLY_MEMBERS_WITH_LISTED_FUNCTIONS) {
-            throw new DomainBusinessRuleException(
-                    "Este evento não está configurado para convocar apenas membros de funções específicas. O modo atual é: "
-                            + configuration.getFunctionCallMode().getTitle()
-            );
-        }
         OrganizationEventCalledFunction functionCalledCreated = new OrganizationEventCalledFunction(this, function, minMembers, maxMembers, assignmentMode);
 
 
@@ -203,7 +198,6 @@ public class OrganizationEvent extends BaseEntity {
         }
 
         if (configuration.getFunctionCallMode() == OrganizationEventFunctionCallMode.ONLY_MEMBERS_WITH_LISTED_FUNCTIONS) {
-
             boolean allowed = calledFunctions.stream()
                     .map(OrganizationEventCalledFunction::getFunction)
                     .anyMatch(function -> function.hasMemberId(member.getId()));
@@ -247,9 +241,9 @@ public class OrganizationEvent extends BaseEntity {
 
         this.allowAssignments = false;
 
-        registerEvent(new OrganizationEventLockAvailabilityEvent(this));
-
         processAutomaticAssignmentsParticipants();
+
+        registerEvent(new OrganizationEventLockAvailabilityEvent(this));
     }
 
     public void start() {
@@ -280,7 +274,7 @@ public class OrganizationEvent extends BaseEntity {
         markParticipantsAsNotAssigned();
     }
 
-    public void respondAvailability(UUID memberId, boolean available) {
+    public void respondAvailability(OrganizationMember member, boolean available, UUID functionId) {
         if (!allowAssignments) {
             throw new DomainBusinessRuleException("Este evento não está aceitando respostas de disponibilidade no momento.");
         }
@@ -289,10 +283,26 @@ public class OrganizationEvent extends BaseEntity {
             throw new DomainBusinessRuleException("Somente eventos agendados podem aceitar respostas de disponibilidade.");
         }
 
-        OrganizationEventParticipant participant = findParticipantByMemberId(memberId)
+        OrganizationEventParticipant participant = findParticipantByMemberId(member.getId())
                 .orElseThrow(() -> new DomainBusinessRuleException("Você não é participante deste evento."));
 
         participant.markAvailability(available);
+
+        if (available && functionId != null) {
+            OrganizationFunction function = calledFunctions.stream()
+                    .map(OrganizationEventCalledFunction::getFunction)
+                    .filter(f -> f.getId().equals(functionId))
+                    .findFirst()
+                    .orElseThrow(() -> new DomainBusinessRuleException("A função informada não está entre as funções convocadas para este evento."));
+
+            if (member.getFunctions().stream().noneMatch(f -> f.getOrganizationFunction().getId().equals(functionId))) {
+                throw new DomainBusinessRuleException("Você não pode se disponibilizar para esta função porque não a possui atribuída.");
+            }
+
+            participant.assignFunction(function);
+        } else if (!available) {
+            participant.assignFunction(null);
+        }
     }
 
     public void clearAvailability(UUID memberId) {
@@ -304,6 +314,7 @@ public class OrganizationEvent extends BaseEntity {
                 .orElseThrow(() -> new DomainBusinessRuleException("Você não é participante deste evento."));
 
         participant.clearAvailability();
+        participant.assignFunction(null);
     }
 
     private void markParticipantsAsNotAssigned() {
@@ -313,19 +324,86 @@ public class OrganizationEvent extends BaseEntity {
     }
 
     private void processAutomaticAssignmentsParticipants() {
-        if (configuration.getAssignmentMode() != OrganizationEventAssignmentMode.AUTOMATIC) {
-            return;
+
+        Set<OrganizationEventParticipant> participantsProcessed = new HashSet<>();
+
+        List<OrganizationEventParticipant> availableParticipants = participants.stream()
+                .filter(p -> p.getAvailabilityStatus() == OrganizationEventParticipantAvailabilityStatus.AVAILABLE)
+                .sorted(Comparator.comparing(OrganizationEventParticipant::getUpdatedAt))
+                .toList();
+
+        Map<UUID, List<OrganizationEventParticipant>> participantsByFunction = availableParticipants.stream()
+                .filter(p -> p.getFunction() != null)
+                .collect(Collectors.groupingBy(p -> p.getFunction().getId()));
+
+        if (configuration.getFunctionCallMode() != null) {
+            calledFunctions.forEach(calledFunction -> {
+
+                UUID functionId = calledFunction.getFunction().getId();
+                List<OrganizationEventParticipant> candidates = participantsByFunction.getOrDefault(functionId, List.of());
+
+                for (OrganizationEventParticipant p : candidates) {
+
+                    if (participantsProcessed.contains(p)) {
+                        continue;
+                    }
+
+                    if (calledFunction.getAssignmentMode() == OrganizationEventAssignmentMode.MANUAL) {
+                        p.setStatus(OrganizationEventParticipantStatus.AWAITING_ASSIGNMENT);
+                        participantsProcessed.add(p);
+                        continue;
+                    }
+
+                    if (!assignParticipantWithFunction(p, calledFunction)) {
+                        p.setStatus(OrganizationEventParticipantStatus.NOT_ASSIGNED);
+                    }
+
+                    participantsProcessed.add(p);
+                }
+            });
         }
 
-        participants.forEach(participant -> {
-            if (participant.getAvailabilityStatus() == OrganizationEventParticipantAvailabilityStatus.AVAILABLE) {
-                participant.setStatus(OrganizationEventParticipantStatus.ASSIGNED);
-            }
-            else if(participant.getAvailabilityStatus() == OrganizationEventParticipantAvailabilityStatus.NOT_ANSWERED){
-                participant.setStatus(OrganizationEventParticipantStatus.EXPIRED);
-            }
-        });
+        if (configuration.getAssignmentMode() == OrganizationEventAssignmentMode.AUTOMATIC) {
+            for (OrganizationEventParticipant p : availableParticipants) {
 
-        registerEvent(new OrganizationEventParticipantsStatusChangedEvent(List.copyOf(participants)));
+                if (participantsProcessed.contains(p)) {
+                    continue;
+                }
+
+                p.setStatus(OrganizationEventParticipantStatus.ASSIGNED);
+                participantsProcessed.add(p);
+            }
+        }
+
+        for (OrganizationEventParticipant p : participants) {
+
+            if (participantsProcessed.contains(p)) {
+                continue;
+            }
+
+            if (p.getAvailabilityStatus() == OrganizationEventParticipantAvailabilityStatus.NOT_ANSWERED) {
+                p.setStatus(OrganizationEventParticipantStatus.EXPIRED);
+            } else {
+                p.setStatus(OrganizationEventParticipantStatus.NOT_ASSIGNED);
+            }
+
+            participantsProcessed.add(p);
+        }
+    }
+
+    private boolean assignParticipantWithFunction(OrganizationEventParticipant participant, OrganizationEventCalledFunction calledFunction) {
+        int maxMembersAllowed = calledFunction.getMaxMembers() != null ? calledFunction.getMaxMembers() : Integer.MAX_VALUE;
+
+        long totalMembersAlreadyAssignedWithFunction = participants.stream()
+                .filter(p -> p.getStatus() == OrganizationEventParticipantStatus.ASSIGNED)
+                .filter(p -> p.getFunction() != null && p.getFunction().getId().equals(calledFunction.getFunction().getId()))
+                .count();
+
+        if (totalMembersAlreadyAssignedWithFunction >= maxMembersAllowed) {
+            return false;
+        }
+
+        participant.setStatus(OrganizationEventParticipantStatus.ASSIGNED);
+        return true;
     }
 }

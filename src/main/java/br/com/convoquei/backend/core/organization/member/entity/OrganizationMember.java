@@ -1,5 +1,6 @@
 package br.com.convoquei.backend.core.organization.member.entity;
 
+import br.com.convoquei.backend.core.organization.function.entity.OrganizationFunctionMember;
 import br.com.convoquei.backend.sharedkernel.exceptions.DomainBusinessRuleException;
 import br.com.convoquei.backend.sharedkernel.model.entity.BaseEntity;
 import br.com.convoquei.backend.core.organization.organization.entity.Organization;
@@ -58,8 +59,11 @@ public class OrganizationMember extends BaseEntity {
     @OneToMany(mappedBy = "organizationMember", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<OrganizationMemberRole> roles = new ArrayList<>();
 
+    @OneToMany(mappedBy = "organizationMember", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final List<OrganizationFunctionMember> functions = new ArrayList<>();
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 30, nullable = false)
+    @Column(name = "status", length = 50, nullable = false)
     private OrganizationMemberStatus status;
 
     @Column(name = "joined_at")
@@ -139,6 +143,10 @@ public class OrganizationMember extends BaseEntity {
         leftAt = Instant.now();
 
         keepOnlySystemMemberRole();
+    }
+
+    public List<OrganizationFunctionMember> getFunctions() {
+        return functions;
     }
 
     private void keepOnlySystemMemberRole() {

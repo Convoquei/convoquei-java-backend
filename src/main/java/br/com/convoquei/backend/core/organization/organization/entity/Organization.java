@@ -51,7 +51,7 @@ public class Organization extends BaseEntity {
     private String photoUrl;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 30)
+    @Column(name = "status", nullable = false, length = 50)
     private OrganizationStatus status;
 
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)

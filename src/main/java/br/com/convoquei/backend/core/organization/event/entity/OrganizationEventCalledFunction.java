@@ -34,7 +34,7 @@ public class OrganizationEventCalledFunction extends BaseEntity {
     private Integer maxMembers;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "assignment_mode", nullable = false, length = 30)
+    @Column(name = "assignment_mode", nullable = false, length = 50)
     private OrganizationEventAssignmentMode assignmentMode;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -48,6 +48,18 @@ public class OrganizationEventCalledFunction extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "function_id")
     private OrganizationFunction function;
+
+    public int getMinMembers() {
+        return minMembers;
+    }
+
+    public Integer getMaxMembers() {
+        return maxMembers;
+    }
+
+    public OrganizationEventAssignmentMode getAssignmentMode() {
+        return assignmentMode;
+    }
 
     public OrganizationEvent getEvent() {
         return event;

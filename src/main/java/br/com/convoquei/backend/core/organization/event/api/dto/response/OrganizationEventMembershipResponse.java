@@ -2,15 +2,14 @@ package br.com.convoquei.backend.core.organization.event.api.dto.response;
 
 import br.com.convoquei.backend.core.organization.event.entity.OrganizationEvent;
 import br.com.convoquei.backend.core.organization.event.entity.OrganizationEventParticipant;
-import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventAssignmentMode;
-import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventParticipantAvailabilityStatus;
-import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventParticipantStatus;
-import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventStatus;
+import br.com.convoquei.backend.core.organization.event.enums.*;
 import br.com.convoquei.backend.core.organization.event.repository.views.OrganizationEventMemberView;
 import br.com.convoquei.backend.core.organization.event.valueobject.OrganizationEventConfiguration;
+import br.com.convoquei.backend.core.organization.function.entity.OrganizationFunction;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,14 +25,27 @@ public record OrganizationEventMembershipResponse(
         long availabilityLockEpochSeconds,
         boolean allowAssignment,
         int participantsCount,
+        OrganizationEventFunctionCallMode functionCallMode,
         OrganizationEventAssignmentMode assignmentMode,
         OrganizationEventParticipantAvailabilityStatus membershipAvailabilityStatus,
-        OrganizationEventParticipantStatus membershipStatus
+        OrganizationEventParticipantStatus membershipStatus,
+        UUID membershipFunctionId,
+        String membershipFunctionName,
+        String membershipFunctionEmoji,
+        List<EventCalledFunctionResponse> calledFunctions
 ) {
     public static OrganizationEventMembershipResponse buildFromEventAndMembership(OrganizationEvent event, UUID memberId) {
         OrganizationEventConfiguration configuration = event.getConfiguration();
 
         Optional<OrganizationEventParticipant> membership = event.findParticipantByMemberId(memberId);
+
+        OrganizationFunction memberFunction = membership
+                .map(OrganizationEventParticipant::getFunction)
+                .orElse(null);
+
+        List<EventCalledFunctionResponse> calledFunctions = event.getCalledFunctions().stream()
+                .map(EventCalledFunctionResponse::from)
+                .toList();
 
         return new OrganizationEventMembershipResponse(
                 event.getId(),
@@ -47,9 +59,14 @@ public record OrganizationEventMembershipResponse(
                 event.getTimeUntilAvailabilityLock().toSeconds(),
                 event.isAllowAssignments(),
                 event.getParticipants().size(),
+                event.getConfiguration().getFunctionCallMode(),
                 configuration.getAssignmentMode(),
                 membership.map(OrganizationEventParticipant::getAvailabilityStatus).orElse(null),
-                membership.map(OrganizationEventParticipant::getStatus).orElse(null)
+                membership.map(OrganizationEventParticipant::getStatus).orElse(null),
+                memberFunction != null ? memberFunction.getId() : null,
+                memberFunction != null ? memberFunction.getName() : null,
+                memberFunction != null ? memberFunction.getEmoji() : null,
+                calledFunctions
         );
     }
 
@@ -70,9 +87,14 @@ public record OrganizationEventMembershipResponse(
                 secondsUntilLock,
                 view.allowAssignments(),
                 Math.toIntExact(view.participantsCount()),
+                view.functionCallMode(),
                 view.assignmentMode(),
                 view.participantEventAvailabilityStatus(),
-                view.participantEventStatus()
+                view.participantEventStatus(),
+                view.membershipFunctionId(),
+                view.membershipFunctionName(),
+                view.membershipFunctionEmoji(),
+                view.calledFunctions().stream().map(EventCalledFunctionResponse::from).toList()
         );
     }
 

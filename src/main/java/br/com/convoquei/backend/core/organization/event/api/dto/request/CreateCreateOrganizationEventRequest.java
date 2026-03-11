@@ -13,7 +13,6 @@ public record CreateCreateOrganizationEventRequest(
         @Size(max = 70)
         String name,
 
-        @NotBlank
         @Size(max = 2000)
         String description,
 

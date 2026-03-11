@@ -1,9 +1,13 @@
 package br.com.convoquei.backend.core.organization.event.repository;
 
 import br.com.convoquei.backend.core.organization.event.entity.OrganizationEvent;
+import br.com.convoquei.backend.core.organization.event.entity.OrganizationEventCalledFunction;
 import br.com.convoquei.backend.core.organization.event.entity.OrganizationEventParticipant;
+import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventAssignmentMode;
 import br.com.convoquei.backend.core.organization.event.repository.queries.FindMemberEventsQuery;
+import br.com.convoquei.backend.core.organization.event.repository.views.OrganizationEventCalledFunctionView;
 import br.com.convoquei.backend.core.organization.event.repository.views.OrganizationEventMemberView;
+import br.com.convoquei.backend.core.organization.function.entity.OrganizationFunction;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -12,9 +16,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class OrganizationEventRepositoryImpl implements OrganizationEventRepositoryCustom {
 
@@ -36,11 +39,12 @@ public class OrganizationEventRepositoryImpl implements OrganizationEventReposit
 
         Root<OrganizationEvent> event = query.from(OrganizationEvent.class);
 
-        // JOIN para filtrar/projetar os dados do membro específico
         Join<OrganizationEvent, OrganizationEventParticipant> memberParticipant =
                 joinMemberParticipant(cb, event, organizationMemberId);
 
-        // LEFT JOIN em todos os participantes para contagem — sem correlação
+        Join<OrganizationEventParticipant, OrganizationFunction> participantFunction =
+                memberParticipant.join("function", JoinType.LEFT);
+
         Join<OrganizationEvent, OrganizationEventParticipant> allParticipants =
                 event.join("participants", JoinType.LEFT);
 
@@ -59,17 +63,19 @@ public class OrganizationEventRepositoryImpl implements OrganizationEventReposit
                         event.get("status"),
                         event.get("configuration").get("availabilityLockBeforeStartInMinutes"),
                         event.get("allowAssignments"),
-                        // COUNT via expressão condicional — sem SubPlan
                         cb.count(allParticipants.get("id")),
+                        event.get("configuration").get("functionCallMode"),
                         event.get("configuration").get("assignmentMode"),
                         memberParticipant.get("availabilityStatus"),
-                        memberParticipant.get("status")
+                        memberParticipant.get("status"),
+                        participantFunction.get("id"),
+                        participantFunction.get("name"),
+                        participantFunction.get("emoji")
                 )
         );
 
         query.where(predicates.toArray(new Predicate[0]));
 
-        // GROUP BY necessário porque agora usamos COUNT no SELECT
         query.groupBy(
                 event.get("id"),
                 event.get("configuration").get("name"),
@@ -80,9 +86,13 @@ public class OrganizationEventRepositoryImpl implements OrganizationEventReposit
                 event.get("status"),
                 event.get("configuration").get("availabilityLockBeforeStartInMinutes"),
                 event.get("allowAssignments"),
+                event.get("configuration").get("functionCallMode"),
                 event.get("configuration").get("assignmentMode"),
                 memberParticipant.get("availabilityStatus"),
-                memberParticipant.get("status")
+                memberParticipant.get("status"),
+                participantFunction.get("id"),
+                participantFunction.get("name"),
+                participantFunction.get("emoji")
         );
 
         query.orderBy(cb.asc(event.get("startAt")));
@@ -95,9 +105,62 @@ public class OrganizationEventRepositoryImpl implements OrganizationEventReposit
 
         List<OrganizationEventMemberView> content = typedQuery.getResultList();
 
+        if (!content.isEmpty()) {
+            List<UUID> eventIds = content.stream()
+                    .map(OrganizationEventMemberView::id)
+                    .toList();
+
+            Map<UUID, List<OrganizationEventCalledFunctionView>> calledFunctionsMap =
+                    findCalledFunctionsMappedByEventId(eventIds);
+
+            content = content.stream()
+                    .map(view -> view.withCalledFunctions(
+                            calledFunctionsMap.getOrDefault(view.id(), List.of())
+                    ))
+                    .toList();
+        }
+
         Long total = executeCountQuery(cb, organizationId, organizationMemberId, filters);
 
         return new PageImpl<>(content, pageable, total);
+    }
+
+    private Map<UUID, List<OrganizationEventCalledFunctionView>> findCalledFunctionsMappedByEventId(
+            List<UUID> eventIds
+    ) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Object[]> query = cb.createQuery(Object[].class);
+
+        Root<OrganizationEventCalledFunction> root =
+                query.from(OrganizationEventCalledFunction.class);
+
+        Join<OrganizationEventCalledFunction, OrganizationFunction> function =
+                root.join("function", JoinType.LEFT);
+
+        query.multiselect(
+                root.get("event").get("id"),
+                function.get("id"),
+                function.get("name"),
+                function.get("emoji"),
+                root.get("minMembers"),
+                root.get("maxMembers"),
+                root.get("assignmentMode")
+        );
+
+        query.where(root.get("event").get("id").in(eventIds));
+
+        return entityManager.createQuery(query).getResultList().stream()
+                .collect(Collectors.groupingBy(
+                        row -> (UUID) row[0],
+                        Collectors.mapping(row -> new OrganizationEventCalledFunctionView(
+                                (UUID) row[1],
+                                (String) row[2],
+                                (String) row[3],
+                                (Integer) row[4],
+                                (Integer) row[5],
+                                (OrganizationEventAssignmentMode) row[6]
+                        ), Collectors.toList())
+                ));
     }
 
     private List<Predicate> buildPredicates(

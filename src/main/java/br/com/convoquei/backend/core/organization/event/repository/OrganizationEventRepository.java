@@ -15,7 +15,7 @@ import java.util.UUID;
 
 public interface OrganizationEventRepository extends BaseRepository<OrganizationEvent, UUID>, OrganizationEventRepositoryCustom {
 
-    @EntityGraph(attributePaths = {"participants", "participants.member"})
+    @EntityGraph(attributePaths = {"participants", "participants.member", "calledFunctions", "calledFunctions.function"})
     Optional<OrganizationEvent> findByIdAndOrganizationId(UUID id, UUID organizationId);
     List<OrganizationEvent> findByStatusAndStartAtLessThanEqualAndEndAtGreaterThan(OrganizationEventStatus status, OffsetDateTime now1, OffsetDateTime now2);
 

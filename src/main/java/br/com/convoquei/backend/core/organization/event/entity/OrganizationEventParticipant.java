@@ -42,11 +42,11 @@ public class OrganizationEventParticipant extends BaseEntity {
     private String avatarUrlSnapshot;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 30, nullable = false)
+    @Column(name = "status", length = 50, nullable = false)
     private OrganizationEventParticipantStatus status = OrganizationEventParticipantStatus.PENDING;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "availability_status", length = 30, nullable = false)
+    @Column(name = "availability_status", length = 50, nullable = false)
     private OrganizationEventParticipantAvailabilityStatus availabilityStatus = OrganizationEventParticipantAvailabilityStatus.NOT_ANSWERED;
 
     protected OrganizationEventParticipant() {
@@ -73,6 +73,14 @@ public class OrganizationEventParticipant extends BaseEntity {
 
     public String getAvatarUrlSnapshot() {
         return avatarUrlSnapshot;
+    }
+
+    public OrganizationFunction getFunction() {
+        return function;
+    }
+
+    public void assignFunction(OrganizationFunction function) {
+        this.function = function;
     }
 
     public OrganizationEventParticipantAvailabilityStatus getAvailabilityStatus() {

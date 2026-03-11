@@ -20,15 +20,15 @@ public class OrganizationEventConfiguration {
     private String location;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "assignment_mode", nullable = false, length = 30)
+    @Column(name = "assignment_mode", nullable = false, length = 50)
     private OrganizationEventAssignmentMode assignmentMode;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "call_mode", nullable = false, length = 30)
+    @Column(name = "call_mode", nullable = false, length = 50)
     private OrganizationEventCallMode callMode;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "function_call_mode", nullable = true, length = 30)
+    @Column(name = "function_call_mode", nullable = true, length = 50)
     private OrganizationEventFunctionCallMode functionCallMode;
 
     @Column(name = "availability_lock_before_start_in_minutes", nullable = false)
