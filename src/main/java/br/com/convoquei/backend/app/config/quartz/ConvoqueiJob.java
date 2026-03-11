@@ -1,5 +1,7 @@
 package br.com.convoquei.backend.app.config.quartz;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.jspecify.annotations.NonNull;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -14,6 +16,12 @@ public abstract class ConvoqueiJob extends QuartzJobBean {
 
     private static final Logger log = LoggerFactory.getLogger(ConvoqueiJob.class);
 
+    protected final MeterRegistry meterRegistry;
+
+    protected ConvoqueiJob(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+    }
+
     protected abstract String jobName();
 
     protected abstract String cron();
@@ -24,6 +32,8 @@ public abstract class ConvoqueiJob extends QuartzJobBean {
     protected final void executeInternal(@NonNull JobExecutionContext context) throws JobExecutionException {
 
         Instant startTime = Instant.now();
+
+        Timer.Sample sample = Timer.start(meterRegistry);
 
         log.info("Job {} iniciada em {}", jobName(), startTime);
 
@@ -55,7 +65,14 @@ public abstract class ConvoqueiJob extends QuartzJobBean {
             );
 
             throw new JobExecutionException(ex);
+
+        } finally {
+
+            sample.stop(
+                    Timer.builder("convoquei.job.execution")
+                            .tag("job", jobName())
+                            .register(meterRegistry)
+            );
         }
     }
 }
-

@@ -141,6 +141,12 @@ public class OrganizationEventRepositoryImpl implements OrganizationEventReposit
             );
         }
 
+        if (filters.eventStatus() != null && !filters.eventStatus().isEmpty()) {
+            predicates.add(
+                    event.get("status").in(filters.eventStatus())
+            );
+        }
+
         return predicates;
     }
 

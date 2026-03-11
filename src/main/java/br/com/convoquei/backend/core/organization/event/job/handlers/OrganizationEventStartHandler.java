@@ -1,4 +1,4 @@
-package br.com.convoquei.backend.core.organization.event.handlers;
+package br.com.convoquei.backend.core.organization.event.job.handlers;
 
 import br.com.convoquei.backend.app.config.quartz.ConvoqueiJobHandler;
 import br.com.convoquei.backend.core.organization.event.entity.OrganizationEvent;

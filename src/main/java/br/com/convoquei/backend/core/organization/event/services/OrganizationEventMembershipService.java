@@ -7,7 +7,6 @@ import br.com.convoquei.backend.core.organization.event.repository.OrganizationE
 import br.com.convoquei.backend.core.organization.event.repository.queries.FindMemberEventsQuery;
 import br.com.convoquei.backend.core.organization.member.entity.OrganizationMember;
 import br.com.convoquei.backend.core.user.provider.CurrentUserProvider;
-import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -38,6 +37,7 @@ public class OrganizationEventMembershipService {
                 request.getStartAfter(),
                 request.getStartBefore(),
                 request.getParticipantStatus(),
+                request.getEventStatus(),
                 request.toPageRequest()
         );
     }

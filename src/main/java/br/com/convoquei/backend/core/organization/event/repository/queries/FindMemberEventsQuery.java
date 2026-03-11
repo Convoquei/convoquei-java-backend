@@ -1,6 +1,7 @@
 package br.com.convoquei.backend.core.organization.event.repository.queries;
 
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventParticipantStatus;
+import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventStatus;
 import org.springframework.data.domain.Pageable;
 
 import java.time.OffsetDateTime;
@@ -11,6 +12,7 @@ public record FindMemberEventsQuery(
         OffsetDateTime startAfter,
         OffsetDateTime startBefore,
         List<OrganizationEventParticipantStatus> participantStatus,
+        List<OrganizationEventStatus> eventStatus,
         Pageable pageable
 ) {
 }

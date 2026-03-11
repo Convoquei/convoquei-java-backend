@@ -3,6 +3,7 @@ package br.com.convoquei.backend.sharedkernel.model.entity;
 import jakarta.persistence.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.domain.AbstractAggregateRoot;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
@@ -10,7 +11,7 @@ import java.util.UUID;
 
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public abstract class BaseEntity {
+public abstract class BaseEntity extends AbstractAggregateRoot<BaseEntity> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
