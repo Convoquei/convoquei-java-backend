@@ -32,7 +32,7 @@ public record CreateCreateOrganizationEventRequest(
         @Min(0)
         int availabilityLockBeforeStartInMinutes,
 
-        List<@NotNull UUID> calledFunctionIds,
+        List<@NotNull CreateCreateOrganizationEventCalledFunctionRequest> calledFunctionIds,
 
         List<@NotNull UUID> calledGroupIds,
 

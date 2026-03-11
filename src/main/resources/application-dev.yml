@@ -19,8 +19,24 @@ spring:
         use_sql_comments: false
         show_sql: true
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
 springdoc:
   api-docs:
     enabled: true
   swagger-ui:
     enabled: true
+  show-actuator: true
+  group-configs:
+    - group: api
+      paths-to-match: /**
+      paths-to-exclude: /actuator/**
+    - group: actuator
+      paths-to-match: /actuator/**

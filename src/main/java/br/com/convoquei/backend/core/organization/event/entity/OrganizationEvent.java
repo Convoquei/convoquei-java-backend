@@ -140,7 +140,7 @@ public class OrganizationEvent extends BaseEntity {
         calledGroups.add(groupCalledCreated);
     }
 
-    public void addCalledFunctions(OrganizationFunction function) {
+    public void addCalledFunctions(OrganizationFunction function, int minMembers, Integer maxMembers, OrganizationEventAssignmentMode assignmentMode) {
 
         if (configuration.getFunctionCallMode() != OrganizationEventFunctionCallMode.ONLY_MEMBERS_WITH_LISTED_FUNCTIONS) {
             throw new DomainBusinessRuleException(
@@ -148,7 +148,7 @@ public class OrganizationEvent extends BaseEntity {
                             + configuration.getFunctionCallMode().getTitle()
             );
         }
-        OrganizationEventCalledFunction functionCalledCreated = new OrganizationEventCalledFunction(this, function);
+        OrganizationEventCalledFunction functionCalledCreated = new OrganizationEventCalledFunction(this, function, minMembers, maxMembers, assignmentMode);
 
 
         calledFunctions.add(functionCalledCreated);

@@ -1,5 +1,6 @@
 package br.com.convoquei.backend.core.organization.event.api.dto.request.interfaces;
 
+import br.com.convoquei.backend.core.organization.event.api.dto.request.CreateCreateOrganizationEventCalledFunctionRequest;
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventAssignmentMode;
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventCallMode;
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventFunctionCallMode;
@@ -23,7 +24,7 @@ public interface CreateOrganizationEventContract {
 
     int availabilityLockBeforeStartInMinutes();
 
-    List<UUID> calledFunctionIds();
+    List<CreateCreateOrganizationEventCalledFunctionRequest> calledFunctionIds();
 
     List<UUID> calledGroupIds();
 }

@@ -20,7 +20,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 @Configuration
 @EnableWebSecurity
 public class AuthenticationConfig {
-
     private final ProblemDetailAuthenticationEntryPoint authenticationEntryPoint;
 
     public AuthenticationConfig(ProblemDetailAuthenticationEntryPoint authenticationEntryPoint) {
@@ -60,6 +59,7 @@ public class AuthenticationConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/v*/auth/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))

@@ -90,13 +90,13 @@ public class CreateOrganizationEventService {
 
         Organization organization = event.getOrganization();
 
-        request.calledFunctionIds().forEach(functionId -> {
+        request.calledFunctionIds().forEach(requestFunction -> {
             var function = organization.getFunctions().stream()
-                    .filter(f -> f.getId().equals(functionId))
+                    .filter(f -> f.getId().equals(requestFunction.id()))
                     .findFirst()
                     .orElseThrow(() -> new DomainBusinessRuleException("Uma das funções especificadas para convocação não foi encontrada na organização."));
 
-            event.addCalledFunctions(function);
+            event.addCalledFunctions(function, requestFunction.minMembers(), requestFunction.maxMembers(), requestFunction.assignmentMode());
         });
     }
 
