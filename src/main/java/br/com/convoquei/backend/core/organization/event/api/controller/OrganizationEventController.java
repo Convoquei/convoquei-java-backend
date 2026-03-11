@@ -39,6 +39,14 @@ public class OrganizationEventController {
         return createOrganizationService.execute(organizationId, request);
     }
 
+    @GetMapping("/{eventId}")
+    @RequiredOrganizationPermission(OrganizationPermission.MEMBER)
+    public OrganizationEventMembershipResponse getEvent(
+            @PathVariable UUID organizationId,
+            @PathVariable UUID eventId) {
+        return organizationEventMembershipService.getEvent(organizationId, eventId);
+    }
+
     @GetMapping
     @RequiredOrganizationPermission(OrganizationPermission.MEMBER)
     public PagedResponse<OrganizationEventMembershipResponse> listEvents(@PathVariable UUID organizationId, @Valid @ParameterObject ListOrganizationEventRequest request) {

@@ -210,6 +210,12 @@ public class OrganizationEventRepositoryImpl implements OrganizationEventReposit
             );
         }
 
+        if (filters.availabilityStatus() != null && !filters.availabilityStatus().isEmpty()) {
+            predicates.add(
+                    memberParticipant.get("availabilityStatus").in(filters.availabilityStatus())
+            );
+        }
+
         return predicates;
     }
 

@@ -1,6 +1,7 @@
 package br.com.convoquei.backend.core.organization.event.api.dto.request;
 
 import br.com.convoquei.backend.app.api.dto.request.PagedRequest;
+import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventParticipantAvailabilityStatus;
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventParticipantStatus;
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventStatus;
 
@@ -11,6 +12,7 @@ public class ListOrganizationEventRequest extends PagedRequest {
     private String name;
     private OffsetDateTime startAfter;
     private OffsetDateTime startBefore;
+    private List<OrganizationEventParticipantAvailabilityStatus> availabilityStatus;
     private List<OrganizationEventParticipantStatus> participantStatus;
     private List<OrganizationEventStatus> eventStatus;
 
@@ -28,6 +30,14 @@ public class ListOrganizationEventRequest extends PagedRequest {
 
     public OffsetDateTime getStartBefore() {
         return startBefore;
+    }
+
+    public List<OrganizationEventParticipantAvailabilityStatus> getAvailabilityStatus() {
+        return availabilityStatus;
+    }
+
+    public void setAvailabilityStatus(List<OrganizationEventParticipantAvailabilityStatus> availabilityStatus) {
+        this.availabilityStatus = availabilityStatus;
     }
 
     public List<OrganizationEventParticipantStatus> getParticipantStatus() {

@@ -15,6 +15,7 @@ import br.com.convoquei.backend.sharedkernel.exceptions.DomainBusinessRuleExcept
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Service
@@ -50,7 +51,26 @@ public class CreateOrganizationEventService {
         return OrganizationEventMembershipResponse.buildFromEventAndMembership(event, member.getId());
     }
 
-    private static OrganizationEventConfiguration buildEventConfigurationFromRequest(CreateCreateOrganizationEventRequest request) {
+    private static OrganizationEventConfiguration buildEventConfigurationFromRequest(
+            CreateCreateOrganizationEventRequest request) {
+
+        int minutesLockBeforeStart = request.availabilityLockBeforeStartInMinutes();
+
+        if (minutesLockBeforeStart > 0) {
+
+            OffsetDateTime startAt = request.startDate();
+            OffsetDateTime lockMoment = startAt.minusMinutes(minutesLockBeforeStart);
+
+            OffsetDateTime minimumAllowedMoment = OffsetDateTime.now()
+                    .minusMinutes(5);
+
+            if (lockMoment.isBefore(minimumAllowedMoment)) {
+                throw new DomainBusinessRuleException(
+                        "Para permitir que os membros respondam a disponibilidade, o bloqueio deve ocorrer pelo menos 5 minutos."
+                );
+            }
+        }
+
         return new OrganizationEventConfiguration(
                 request.name(),
                 request.description(),
@@ -86,7 +106,7 @@ public class CreateOrganizationEventService {
             return;
 
         if (request.calledFunctionIds() != null && request.calledFunctionIds().isEmpty())
-            throw new DomainBusinessRuleException("Informe ao menos uma função caso queira utilizar o recurso de convocação por função.");
+            throw new DomainBusinessRuleException("Informe ao menos uma funcao para que as regras de escalacao possam ser aplicadas.");
 
         Organization organization = event.getOrganization();
 

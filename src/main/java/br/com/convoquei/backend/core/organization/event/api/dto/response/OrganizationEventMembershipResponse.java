@@ -71,8 +71,15 @@ public record OrganizationEventMembershipResponse(
     }
 
     public static OrganizationEventMembershipResponse buildFromEventMembershipView(OrganizationEventMemberView view) {
-        long secondsUntilLock = view.availabilityLockBeforeStartInMinutes() != null
-                ? OffsetDateTime.now().until(view.startAt().minusSeconds(view.availabilityLockBeforeStartInMinutes() * 60L), ChronoUnit.SECONDS)
+
+        int availabilityLockBeforeStartInMinutes = view.availabilityLockBeforeStartInMinutes() != null
+                ? view.availabilityLockBeforeStartInMinutes()
+                : 0;
+
+        long secondsUntilLock = availabilityLockBeforeStartInMinutes > 0
+                ? Math.max(0L, OffsetDateTime.now().until(
+                view.startAt().minusMinutes(view.availabilityLockBeforeStartInMinutes()),
+                ChronoUnit.SECONDS))
                 : 0L;
 
         return new OrganizationEventMembershipResponse(
@@ -83,7 +90,7 @@ public record OrganizationEventMembershipResponse(
                 view.startAt(),
                 view.endAt(),
                 view.status(),
-                view.availabilityLockBeforeStartInMinutes(),
+                availabilityLockBeforeStartInMinutes,
                 secondsUntilLock,
                 view.allowAssignments(),
                 Math.toIntExact(view.participantsCount()),
