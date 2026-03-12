@@ -296,9 +296,13 @@ public class OrganizationEvent extends BaseEntity {
             }
 
             participant.assignFunction(function);
+            participant.setStatus(OrganizationEventParticipantStatus.AWAITING_ASSIGNMENT);
         } else if (!available) {
             participant.assignFunction(null);
+            participant.setStatus(OrganizationEventParticipantStatus.PENDING);
         }
+
+        processAssignmentForParticipant(participant);
     }
 
     public void clearAvailability(UUID memberId) {
@@ -313,6 +317,17 @@ public class OrganizationEvent extends BaseEntity {
         participant.assignFunction(null);
     }
 
+    public void processAssignmentForParticipant(OrganizationEventParticipant participant) {
+        if (status != OrganizationEventStatus.SCHEDULED) {
+            return;
+        }
+
+        Map<UUID, OrganizationEventCalledFunction> calledFunctionsByFunctionId = calledFunctions.stream()
+                .collect(Collectors.toMap(cf -> cf.getFunction().getId(), cf -> cf));
+
+        processParticipantAssignment(participant, calledFunctionsByFunctionId);
+    }
+
     private void markParticipantsAsNotAssigned() {
         this.participants.stream()
                 .filter(p -> p.getStatus() != OrganizationEventParticipantStatus.ASSIGNED)
@@ -320,71 +335,50 @@ public class OrganizationEvent extends BaseEntity {
     }
 
     private void processAutomaticAssignmentsParticipants() {
+        Map<UUID, OrganizationEventCalledFunction> calledFunctionsByFunctionId = calledFunctions.stream()
+                .collect(Collectors.toMap(cf -> cf.getFunction().getId(), cf -> cf));
 
-        Set<OrganizationEventParticipant> participantsProcessed = new HashSet<>();
-
-        List<OrganizationEventParticipant> availableParticipants = participants.stream()
-                .filter(p -> p.getAvailabilityStatus() == OrganizationEventParticipantAvailabilityStatus.AVAILABLE)
+        participants.stream()
                 .sorted(Comparator.comparing(OrganizationEventParticipant::getUpdatedAt))
-                .toList();
+                .forEach(p -> processParticipantAssignment(p, calledFunctionsByFunctionId));
+    }
 
-        Map<UUID, List<OrganizationEventParticipant>> participantsByFunction = availableParticipants.stream()
-                .filter(p -> p.getFunction() != null)
-                .collect(Collectors.groupingBy(p -> p.getFunction().getId()));
+    private void processParticipantAssignment(OrganizationEventParticipant participant, Map<UUID, OrganizationEventCalledFunction> calledFunctionsByFunctionId) {
+        if (participant.getAvailabilityStatus() != OrganizationEventParticipantAvailabilityStatus.AVAILABLE) {
+            OrganizationEventParticipantStatus newStatus =
+                    participant.getAvailabilityStatus() == OrganizationEventParticipantAvailabilityStatus.NOT_ANSWERED
+                            ? OrganizationEventParticipantStatus.EXPIRED
+                            : OrganizationEventParticipantStatus.NOT_ASSIGNED;
+            participant.setStatus(newStatus);
+            return;
+        }
 
-        if (configuration.getFunctionCallMode() != null) {
-            calledFunctions.forEach(calledFunction -> {
+        OrganizationFunction function = participant.getFunction();
 
-                UUID functionId = calledFunction.getFunction().getId();
-                List<OrganizationEventParticipant> candidates = participantsByFunction.getOrDefault(functionId, List.of());
+        if (configuration.getFunctionCallMode() != null && function != null) {
+            OrganizationEventCalledFunction calledFunction = calledFunctionsByFunctionId.get(function.getId());
 
-                for (OrganizationEventParticipant p : candidates) {
-
-                    if (participantsProcessed.contains(p)) {
-                        continue;
-                    }
-
-                    if (calledFunction.getAssignmentMode() == OrganizationEventAssignmentMode.MANUAL) {
-                        p.setStatus(OrganizationEventParticipantStatus.AWAITING_ASSIGNMENT);
-                        participantsProcessed.add(p);
-                        continue;
-                    }
-
-                    if (!assignParticipantWithFunction(p, calledFunction)) {
-                        p.setStatus(OrganizationEventParticipantStatus.NOT_ASSIGNED);
-                    }
-
-                    participantsProcessed.add(p);
+            if (calledFunction != null) {
+                if (calledFunction.getAssignmentMode() == OrganizationEventAssignmentMode.MANUAL) {
+                    participant.setStatus(OrganizationEventParticipantStatus.AWAITING_ASSIGNMENT);
+                    return;
                 }
-            });
+
+                if (assignParticipantWithFunction(participant, calledFunction)) {
+                    return;
+                }
+
+                participant.setStatus(OrganizationEventParticipantStatus.NOT_ASSIGNED);
+                return;
+            }
         }
 
         if (configuration.getAssignmentMode() == OrganizationEventAssignmentMode.AUTOMATIC) {
-            for (OrganizationEventParticipant p : availableParticipants) {
-
-                if (participantsProcessed.contains(p)) {
-                    continue;
-                }
-
-                p.setStatus(OrganizationEventParticipantStatus.ASSIGNED);
-                participantsProcessed.add(p);
-            }
+            participant.setStatus(OrganizationEventParticipantStatus.ASSIGNED);
+            return;
         }
 
-        for (OrganizationEventParticipant p : participants) {
-
-            if (participantsProcessed.contains(p)) {
-                continue;
-            }
-
-            if (p.getAvailabilityStatus() == OrganizationEventParticipantAvailabilityStatus.NOT_ANSWERED) {
-                p.setStatus(OrganizationEventParticipantStatus.EXPIRED);
-            } else {
-                p.setStatus(OrganizationEventParticipantStatus.NOT_ASSIGNED);
-            }
-
-            participantsProcessed.add(p);
-        }
+        participant.setStatus(OrganizationEventParticipantStatus.NOT_ASSIGNED);
     }
 
     private boolean assignParticipantWithFunction(OrganizationEventParticipant participant, OrganizationEventCalledFunction calledFunction) {
