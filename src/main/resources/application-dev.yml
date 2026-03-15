@@ -4,6 +4,13 @@ app:
     access-token-minutes: 525000
     refresh-token-days: 365
 
+cloudflare:
+  r2:
+    endpoint: https://840301accec0eb11d8418f4a5c4c607f.r2.cloudflarestorage.com
+    access-key: 1e0ee285ea6d4bd1b83d4d1cd5eae775
+    secret-key: 581efc34bc846f6452a8ba65d935372a98e6c55eb0596abfc591145ec7058069
+    bucket-name: convoquei-assets
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/convoquei

@@ -78,4 +78,8 @@ public class User extends BaseEntity {
     public boolean isActive() {
         return this.status == UserStatus.ACTIVE;
     }
+
+    public void setAvatarUrl(String url){
+        this.avatarUrl = url;
+    }
 }
