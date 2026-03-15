@@ -48,6 +48,9 @@ public class OrganizationEventRepositoryImpl implements OrganizationEventReposit
         Join<OrganizationEvent, OrganizationEventParticipant> allParticipants =
                 event.join("participants", JoinType.LEFT);
 
+        Join<Object, Object> cancelledByMember = event.join("cancelledBy", JoinType.LEFT);
+        Join<Object, Object> cancelledByUser = cancelledByMember.join("user", JoinType.LEFT);
+
         List<Predicate> predicates =
                 buildPredicates(cb, event, memberParticipant, organizationId, filters);
 
@@ -70,7 +73,8 @@ public class OrganizationEventRepositoryImpl implements OrganizationEventReposit
                         memberParticipant.get("status"),
                         participantFunction.get("id"),
                         participantFunction.get("name"),
-                        participantFunction.get("emoji")
+                        participantFunction.get("emoji"),
+                        cancelledByUser.get("name")
                 )
         );
 
@@ -92,7 +96,8 @@ public class OrganizationEventRepositoryImpl implements OrganizationEventReposit
                 memberParticipant.get("status"),
                 participantFunction.get("id"),
                 participantFunction.get("name"),
-                participantFunction.get("emoji")
+                participantFunction.get("emoji"),
+                cancelledByUser.get("name")
         );
 
         query.orderBy(cb.asc(event.get("startAt")));

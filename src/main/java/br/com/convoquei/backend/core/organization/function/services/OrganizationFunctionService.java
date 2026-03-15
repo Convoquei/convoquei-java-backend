@@ -1,5 +1,6 @@
 package br.com.convoquei.backend.core.organization.function.services;
 
+import br.com.convoquei.backend.core.organization.event.services.SyncEventParticipantsService;
 import br.com.convoquei.backend.sharedkernel.exceptions.DomainBusinessRuleException;
 import br.com.convoquei.backend.sharedkernel.exceptions.DomainNotFoundException;
 import br.com.convoquei.backend.app.api.dto.request.PagedRequest;
@@ -12,6 +13,7 @@ import br.com.convoquei.backend.core.organization.function.api.dto.request.ListF
 import br.com.convoquei.backend.core.organization.function.api.dto.response.OrganizationFunctionMemberResponse;
 import br.com.convoquei.backend.core.organization.function.api.dto.response.OrganizationFunctionResponse;
 import br.com.convoquei.backend.core.organization.function.entity.OrganizationFunction;
+import br.com.convoquei.backend.core.organization.function.entity.OrganizationFunctionMember;
 import br.com.convoquei.backend.core.organization.function.repository.OrganizationFunctionMemberRepository;
 import br.com.convoquei.backend.core.organization.function.repository.OrganizationFunctionRepository;
 import br.com.convoquei.backend.core.organization.member.entity.OrganizationMember;
@@ -24,6 +26,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -34,19 +37,22 @@ public class OrganizationFunctionService {
     private final OrganizationMemberRepository organizationMemberRepository;
     private final OrganizationRepository organizationRepository;
     private final CurrentUserProvider currentUserProvider;
+    private final SyncEventParticipantsService syncEventParticipantsService;
 
     public OrganizationFunctionService(
             OrganizationFunctionRepository organizationFunctionRepository,
             OrganizationFunctionMemberRepository organizationFunctionMemberRepository,
             OrganizationMemberRepository organizationMemberRepository,
             OrganizationRepository organizationRepository,
-            CurrentUserProvider currentUserProvider
+            CurrentUserProvider currentUserProvider,
+            SyncEventParticipantsService syncEventParticipantsService
     ) {
         this.organizationFunctionRepository = organizationFunctionRepository;
         this.organizationFunctionMemberRepository = organizationFunctionMemberRepository;
         this.organizationMemberRepository = organizationMemberRepository;
         this.organizationRepository = organizationRepository;
         this.currentUserProvider = currentUserProvider;
+        this.syncEventParticipantsService = syncEventParticipantsService;
     }
 
     @Transactional
@@ -109,20 +115,28 @@ public class OrganizationFunctionService {
 
         function.addMember(memberToAdd);
         organizationFunctionRepository.save(function);
+        syncEventParticipantsService.executeForMember(organizationId, memberToAdd);
 
         return OrganizationFunctionResponse.buildFromFunction(function);
     }
 
     @Transactional
-    public OrganizationFunctionResponse removeMember(UUID organizationId, UUID functionId, UUID memberId) {
+    public OrganizationFunctionResponse removeMember(UUID organizationId, UUID functionId, UUID functionParticipantId) {
         OrganizationMember requester = currentUserProvider.requireOrganizationMembership(organizationId);
         if (!requester.hasPermission(OrganizationPermission.MANAGE_FUNCTIONS))
             throw new DomainBusinessRuleException("Você não tem permissão para gerenciar funções desta organização.");
 
         OrganizationFunction function = requireFunction(organizationId, functionId);
 
-        function.removeMember(memberId);
+        OrganizationMember removedMember = function.getMembers().stream()
+                .filter(m -> m.getId().equals(functionParticipantId))
+                .map(OrganizationFunctionMember::getOrganizationMember)
+                .findFirst()
+                .orElseThrow(() -> new DomainNotFoundException("Membro não encontrado nesta função."));
+
+        function.removeMember(functionParticipantId);
         organizationFunctionRepository.save(function);
+        syncEventParticipantsService.executeForMember(organizationId, removedMember);
 
         return OrganizationFunctionResponse.buildFromFunction(function);
     }
@@ -135,8 +149,13 @@ public class OrganizationFunctionService {
 
         OrganizationFunction function = requireFunction(organizationId, functionId);
 
+        List<OrganizationMember> removedMembers = function.getMembers().stream()
+                .map(OrganizationFunctionMember::getOrganizationMember)
+                .toList();
+
         function.clearMembers();
         organizationFunctionRepository.save(function);
+        syncEventParticipantsService.executeForMembers(organizationId, removedMembers);
 
         return OrganizationFunctionResponse.buildFromFunction(function);
     }

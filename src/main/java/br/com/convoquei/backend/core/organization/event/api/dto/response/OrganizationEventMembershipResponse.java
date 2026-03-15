@@ -32,7 +32,8 @@ public record OrganizationEventMembershipResponse(
         UUID membershipFunctionId,
         String membershipFunctionName,
         String membershipFunctionEmoji,
-        List<EventCalledFunctionResponse> calledFunctions
+        List<EventCalledFunctionResponse> calledFunctions,
+        String cancelledByName
 ) {
     public static OrganizationEventMembershipResponse buildFromEventAndMembership(OrganizationEvent event, UUID memberId) {
         OrganizationEventConfiguration configuration = event.getConfiguration();
@@ -66,7 +67,8 @@ public record OrganizationEventMembershipResponse(
                 memberFunction != null ? memberFunction.getId() : null,
                 memberFunction != null ? memberFunction.getName() : null,
                 memberFunction != null ? memberFunction.getEmoji() : null,
-                calledFunctions
+                calledFunctions,
+                event.getCancelledBy() != null ? event.getCancelledBy().getUser().getName() : null
         );
     }
 
@@ -97,7 +99,8 @@ public record OrganizationEventMembershipResponse(
                 view.membershipFunctionId(),
                 view.membershipFunctionName(),
                 view.membershipFunctionEmoji(),
-                view.calledFunctions().stream().map(EventCalledFunctionResponse::from).toList()
+                view.calledFunctions().stream().map(EventCalledFunctionResponse::from).toList(),
+                view.cancelledByName()
         );
     }
 

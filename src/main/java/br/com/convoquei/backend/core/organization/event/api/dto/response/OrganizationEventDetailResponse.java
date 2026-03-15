@@ -33,6 +33,7 @@ public record OrganizationEventDetailResponse(
         int availabilityLockBeforeStartInMinutes,
         long availabilityLockEpochSeconds,
         boolean allowAssignment,
+        String cancelledByName,
         List<OrganizationEventDetailCalledGroupResponse> calledGroups,
         List<OrganizationEventDetailCalledFunctionResponse> calledFunctions,
         List<OrganizationEventDetailParticipantResponse> participants
@@ -124,6 +125,7 @@ public record OrganizationEventDetailResponse(
                 config.getAvailabilityLockBeforeStartInMinutes(),
                 OrganizationEventHelper.secondsUntilAvailabilityLock(event.getStartAt(), config.getAvailabilityLockBeforeStartInMinutes()),
                 event.isAllowAssignments(),
+                event.getCancelledBy() != null ? event.getCancelledBy().getUser().getName() : null,
                 calledGroups,
                 calledFunctions,
                 participants

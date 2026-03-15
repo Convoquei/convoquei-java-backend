@@ -1,4 +1,5 @@
 package br.com.convoquei.backend.core.organization.member.services;
+import br.com.convoquei.backend.core.organization.event.services.SyncEventParticipantsService;
 import br.com.convoquei.backend.sharedkernel.exceptions.DomainBusinessRuleException;
 import br.com.convoquei.backend.sharedkernel.exceptions.DomainNotFoundException;
 import br.com.convoquei.backend.app.api.dto.response.PagedResponse;
@@ -39,6 +40,7 @@ public class OrganizationMemberService {
     private final OrganizationGroupRepository organizationGroupRepository;
     private final OrganizationFunctionMemberRepository organizationFunctionMemberRepository;
     private final OrganizationFunctionRepository organizationFunctionRepository;
+    private final SyncEventParticipantsService syncEventParticipantsService;
 
     public OrganizationMemberService(
             CurrentUserProvider currentUserProvider,
@@ -46,7 +48,8 @@ public class OrganizationMemberService {
             OrganizationGroupParticipantRepository organizationGroupParticipantRepository,
             OrganizationGroupRepository organizationGroupRepository,
             OrganizationFunctionMemberRepository organizationFunctionMemberRepository,
-            OrganizationFunctionRepository organizationFunctionRepository
+            OrganizationFunctionRepository organizationFunctionRepository,
+            SyncEventParticipantsService syncEventParticipantsService
     ) {
         this.currentUserProvider = currentUserProvider;
         this.organizationMemberRepository = organizationMemberRepository;
@@ -54,6 +57,7 @@ public class OrganizationMemberService {
         this.organizationGroupRepository = organizationGroupRepository;
         this.organizationFunctionMemberRepository = organizationFunctionMemberRepository;
         this.organizationFunctionRepository = organizationFunctionRepository;
+        this.syncEventParticipantsService = syncEventParticipantsService;
     }
 
     public MyMemberhipResponse getMembership(UUID organizationId) {
@@ -172,6 +176,8 @@ public class OrganizationMemberService {
 
         organizationGroupParticipantRepository.saveAll(newParticipants);
 
+        syncEventParticipantsService.executeForMember(organizationId, member);
+
         List<MemberGroupSummaryResponse> groupSummaries = groups.stream()
                 .map(g -> new MemberGroupSummaryResponse(g.getId(), g.getName(), g.getEmoji()))
                 .toList();
@@ -206,6 +212,8 @@ public class OrganizationMemberService {
                 .toList();
 
         organizationFunctionMemberRepository.saveAll(newFunctionMembers);
+
+        syncEventParticipantsService.executeForMember(organizationId, member);
 
         List<MemberFunctionSummaryResponse> functionSummaries = functions.stream()
                 .map(f -> new MemberFunctionSummaryResponse(f.getId(), f.getName(), f.getEmoji()))

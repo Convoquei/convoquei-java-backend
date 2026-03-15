@@ -3,18 +3,18 @@ package br.com.convoquei.backend.core.organization.event.api.controller;
 import br.com.convoquei.backend.app.api.dto.response.PagedResponse;
 import br.com.convoquei.backend.app.security.annotation.RequiredOrganizationPermission;
 import br.com.convoquei.backend.core.organization.event.api.dto.request.CreateCreateOrganizationEventRequest;
+import br.com.convoquei.backend.core.organization.event.api.dto.request.UpdateOrganizationEventRequest;
 import br.com.convoquei.backend.core.organization.event.api.dto.request.ListOrganizationEventRequest;
 import br.com.convoquei.backend.core.organization.event.api.dto.request.RespondEventAvailabilityRequest;
 import br.com.convoquei.backend.core.organization.event.api.dto.response.OrganizationEventDetailResponse;
 import br.com.convoquei.backend.core.organization.event.api.dto.response.OrganizationEventMembershipResponse;
-import br.com.convoquei.backend.core.organization.event.services.ClearEventAvailabilityService;
-import br.com.convoquei.backend.core.organization.event.services.GetOrganizationEventDetailService;
-import br.com.convoquei.backend.core.organization.event.services.CreateOrganizationEventService;
-import br.com.convoquei.backend.core.organization.event.services.OrganizationEventMembershipService;
-import br.com.convoquei.backend.core.organization.event.services.RespondEventAvailabilityService;
+import br.com.convoquei.backend.core.organization.event.services.*;
+import br.com.convoquei.backend.core.organization.event.services.LockOrganizationEventAssignmentsService;
+import br.com.convoquei.backend.core.organization.event.services.ReopenOrganizationEventAssignmentsService;
 import br.com.convoquei.backend.core.organization.role.enums.OrganizationPermission;
 import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -24,23 +24,38 @@ import java.util.UUID;
 public class OrganizationEventController {
 
     public final CreateOrganizationEventService createOrganizationService;
+    public final CancelOrganizationEventService cancelOrganizationEventService;
     public final OrganizationEventMembershipService organizationEventMembershipService;
     public final RespondEventAvailabilityService respondEventAvailabilityService;
     public final ClearEventAvailabilityService clearEventAvailabilityService;
     public final GetOrganizationEventDetailService getOrganizationEventDetailService;
+    public final UpdateOrganizationEventService updateOrganizationEventService;
+    public final ReopenOrganizationEventAssignmentsService reopenOrganizationEventAssignmentsService;
+    public final LockOrganizationEventAssignmentsService lockOrganizationEventAssignmentsService;
 
-    public OrganizationEventController(CreateOrganizationEventService createOrganizationService, OrganizationEventMembershipService organizationEventMembershipService, RespondEventAvailabilityService respondEventAvailabilityService, ClearEventAvailabilityService clearEventAvailabilityService, GetOrganizationEventDetailService getOrganizationEventDetailService) {
+    public OrganizationEventController(CreateOrganizationEventService createOrganizationService, CancelOrganizationEventService cancelOrganizationEventService, OrganizationEventMembershipService organizationEventMembershipService, RespondEventAvailabilityService respondEventAvailabilityService, ClearEventAvailabilityService clearEventAvailabilityService, GetOrganizationEventDetailService getOrganizationEventDetailService, UpdateOrganizationEventService updateOrganizationEventService, ReopenOrganizationEventAssignmentsService reopenOrganizationEventAssignmentsService, LockOrganizationEventAssignmentsService lockOrganizationEventAssignmentsService) {
         this.createOrganizationService = createOrganizationService;
+        this.cancelOrganizationEventService = cancelOrganizationEventService;
         this.organizationEventMembershipService = organizationEventMembershipService;
         this.respondEventAvailabilityService = respondEventAvailabilityService;
         this.clearEventAvailabilityService = clearEventAvailabilityService;
         this.getOrganizationEventDetailService = getOrganizationEventDetailService;
+        this.updateOrganizationEventService = updateOrganizationEventService;
+        this.reopenOrganizationEventAssignmentsService = reopenOrganizationEventAssignmentsService;
+        this.lockOrganizationEventAssignmentsService = lockOrganizationEventAssignmentsService;
     }
 
     @PostMapping
     @RequiredOrganizationPermission(OrganizationPermission.MANAGE_EVENTS)
     public OrganizationEventMembershipResponse createEvent(@PathVariable UUID organizationId, @RequestBody @Valid CreateCreateOrganizationEventRequest request) {
         return createOrganizationService.execute(organizationId, request);
+    }
+
+    @PostMapping("/{eventId}/cancel")
+    @RequiredOrganizationPermission(OrganizationPermission.MANAGE_EVENTS)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancelEvent(@PathVariable UUID organizationId, @PathVariable UUID eventId) {
+        cancelOrganizationEventService.execute(organizationId, eventId);
     }
 
     @GetMapping("/{eventId}")
@@ -58,11 +73,20 @@ public class OrganizationEventController {
     }
 
     @GetMapping("/{eventId}/details")
-    @RequiredOrganizationPermission(OrganizationPermission.MANAGE_EVENTS)
+    @RequiredOrganizationPermission(OrganizationPermission.MEMBER)
     public OrganizationEventDetailResponse getEventDetail(
             @PathVariable UUID organizationId,
             @PathVariable UUID eventId) {
         return getOrganizationEventDetailService.execute(organizationId, eventId);
+    }
+
+    @PatchMapping("/{eventId}")
+    @RequiredOrganizationPermission(OrganizationPermission.MANAGE_EVENTS)
+    public OrganizationEventDetailResponse updateEvent(
+            @PathVariable UUID organizationId,
+            @PathVariable UUID eventId,
+            @RequestBody @Valid UpdateOrganizationEventRequest request) {
+        return updateOrganizationEventService.execute(organizationId, eventId, request);
     }
 
     @PatchMapping("/{eventId}/availability")
@@ -80,5 +104,23 @@ public class OrganizationEventController {
             @PathVariable UUID organizationId,
             @PathVariable UUID eventId) {
         return clearEventAvailabilityService.execute(organizationId, eventId);
+    }
+
+    @PostMapping("/{eventId}/reopen-assignments")
+    @RequiredOrganizationPermission(OrganizationPermission.MANAGE_EVENTS)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void reopenAssignments(
+            @PathVariable UUID organizationId,
+            @PathVariable UUID eventId) {
+        reopenOrganizationEventAssignmentsService.execute(organizationId, eventId);
+    }
+
+    @PostMapping("/{eventId}/lock-assignments")
+    @RequiredOrganizationPermission(OrganizationPermission.MANAGE_EVENTS)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void lockAssignments(
+            @PathVariable UUID organizationId,
+            @PathVariable UUID eventId) {
+        lockOrganizationEventAssignmentsService.execute(organizationId, eventId);
     }
 }

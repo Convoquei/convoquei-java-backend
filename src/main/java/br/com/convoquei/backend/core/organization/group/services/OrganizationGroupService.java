@@ -1,5 +1,6 @@
 package br.com.convoquei.backend.core.organization.group.services;
 
+import br.com.convoquei.backend.core.organization.event.services.SyncEventParticipantsService;
 import br.com.convoquei.backend.sharedkernel.exceptions.DomainBusinessRuleException;
 import br.com.convoquei.backend.sharedkernel.exceptions.DomainNotFoundException;
 import br.com.convoquei.backend.app.api.dto.request.PagedRequest;
@@ -12,6 +13,7 @@ import br.com.convoquei.backend.core.organization.group.api.dto.request.ListGrou
 import br.com.convoquei.backend.core.organization.group.api.dto.response.OrganizationGroupParticipantResponse;
 import br.com.convoquei.backend.core.organization.group.api.dto.response.OrganizationGroupResponse;
 import br.com.convoquei.backend.core.organization.group.entity.OrganizationGroup;
+import br.com.convoquei.backend.core.organization.group.entity.OrganizationGroupParticipant;
 import br.com.convoquei.backend.core.organization.group.repository.OrganizationGroupParticipantRepository;
 import br.com.convoquei.backend.core.organization.group.repository.OrganizationGroupRepository;
 import br.com.convoquei.backend.core.organization.member.entity.OrganizationMember;
@@ -24,6 +26,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -34,19 +37,22 @@ public class OrganizationGroupService {
     private final OrganizationMemberRepository organizationMemberRepository;
     private final OrganizationRepository organizationRepository;
     private final CurrentUserProvider currentUserProvider;
+    private final SyncEventParticipantsService syncEventParticipantsService;
 
     public OrganizationGroupService(
             OrganizationGroupRepository organizationGroupRepository,
             OrganizationGroupParticipantRepository organizationGroupParticipantRepository,
             OrganizationMemberRepository organizationMemberRepository,
             OrganizationRepository organizationRepository,
-            CurrentUserProvider currentUserProvider
+            CurrentUserProvider currentUserProvider,
+            SyncEventParticipantsService syncEventParticipantsService
     ) {
         this.organizationGroupRepository = organizationGroupRepository;
         this.organizationGroupParticipantRepository = organizationGroupParticipantRepository;
         this.organizationMemberRepository = organizationMemberRepository;
         this.organizationRepository = organizationRepository;
         this.currentUserProvider = currentUserProvider;
+        this.syncEventParticipantsService = syncEventParticipantsService;
     }
 
     @Transactional
@@ -107,6 +113,7 @@ public class OrganizationGroupService {
 
         group.addParticipant(memberToAdd);
         organizationGroupRepository.save(group);
+        syncEventParticipantsService.executeForMember(organizationId, memberToAdd);
 
         return OrganizationGroupResponse.buildFromGroup(group);
     }
@@ -119,8 +126,15 @@ public class OrganizationGroupService {
 
         OrganizationGroup group = requireGroup(organizationId, groupId);
 
+        OrganizationMember removedMember = group.getParticipants().stream()
+                .filter(p -> p.getId().equals(participantId))
+                .map(OrganizationGroupParticipant::getOrganizationMember)
+                .findFirst()
+                .orElseThrow(() -> new DomainNotFoundException("Participante não encontrado neste grupo."));
+
         group.removeParticipant(participantId);
         organizationGroupRepository.save(group);
+        syncEventParticipantsService.executeForMember(organizationId, removedMember);
 
         return OrganizationGroupResponse.buildFromGroup(group);
     }
@@ -133,8 +147,13 @@ public class OrganizationGroupService {
 
         OrganizationGroup group = requireGroup(organizationId, groupId);
 
+        List<OrganizationMember> removedMembers = group.getParticipants().stream()
+                .map(OrganizationGroupParticipant::getOrganizationMember)
+                .toList();
+
         group.clearParticipants();
         organizationGroupRepository.save(group);
+        syncEventParticipantsService.executeForMembers(organizationId, removedMembers);
 
         return OrganizationGroupResponse.buildFromGroup(group);
     }

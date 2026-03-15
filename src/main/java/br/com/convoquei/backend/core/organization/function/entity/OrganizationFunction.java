@@ -70,8 +70,8 @@ public class OrganizationFunction extends BaseEntity {
         this.members.add(new OrganizationFunctionMember(this, this.organization, member));
     }
 
-    public void removeMember(UUID memberId) {
-        boolean removed = members.removeIf(m -> m.getOrganizationMember().getId().equals(memberId));
+    public void removeMember(UUID functionParticipantI) {
+        boolean removed = members.removeIf(m -> m.getId().equals(functionParticipantI));
 
         if (!removed)
             throw new DomainBusinessRuleException("Membro não encontrado nesta função.");

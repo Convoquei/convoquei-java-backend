@@ -104,7 +104,7 @@ public class OrganizationFunctionController {
         return organizationFunctionService.addMember(organizationId, functionId, request);
     }
 
-    @DeleteMapping("/{functionId}/members/{memberId}")
+    @DeleteMapping("/{functionId}/members/{id}")
     @Operation(summary = "Remover membro da função")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Membro removido com sucesso",
@@ -114,9 +114,9 @@ public class OrganizationFunctionController {
     public OrganizationFunctionResponse removeMember(
             @PathVariable UUID organizationId,
             @PathVariable UUID functionId,
-            @PathVariable UUID memberId
+            @PathVariable UUID id
     ) {
-        return organizationFunctionService.removeMember(organizationId, functionId, memberId);
+        return organizationFunctionService.removeMember(organizationId, functionId, id);
     }
 
     @DeleteMapping("/{functionId}/members")

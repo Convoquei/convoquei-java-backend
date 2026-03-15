@@ -24,6 +24,7 @@ public record OrganizationEventMemberView(
         UUID membershipFunctionId,
         String membershipFunctionName,
         String membershipFunctionEmoji,
+        String cancelledByName,
         List<OrganizationEventCalledFunctionView> calledFunctions
 ) {
     public OrganizationEventMemberView(
@@ -43,14 +44,15 @@ public record OrganizationEventMemberView(
             OrganizationEventParticipantStatus participantEventStatus,
             UUID membershipFunctionId,
             String membershipFunctionName,
-            String membershipFunctionEmoji
+            String membershipFunctionEmoji,
+            String cancelledByName
     ) {
         this(
                 id, name, description, location, startAt, endAt, status,
                 availabilityLockBeforeStartInMinutes, allowAssignments, participantsCount,
                 functionCallMode, assignmentMode, participantEventAvailabilityStatus,
                 participantEventStatus, membershipFunctionId, membershipFunctionName,
-                membershipFunctionEmoji, List.of()
+                membershipFunctionEmoji, cancelledByName, List.of()
         );
     }
 
@@ -60,7 +62,7 @@ public record OrganizationEventMemberView(
                 availabilityLockBeforeStartInMinutes, allowAssignments, participantsCount,
                 functionCallMode, assignmentMode, participantEventAvailabilityStatus,
                 participantEventStatus, membershipFunctionId, membershipFunctionName,
-                membershipFunctionEmoji, calledFunctions
+                membershipFunctionEmoji, cancelledByName, calledFunctions
         );
     }
 }

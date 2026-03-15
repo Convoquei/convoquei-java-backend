@@ -81,4 +81,8 @@ public class OrganizationEventConfiguration {
     public int getAvailabilityLockBeforeStartInMinutes() {
         return availabilityLockBeforeStartInMinutes;
     }
+
+    public void setAvailabilityLockBeforeStartInMinutes(int availabilityLockBeforeStartInMinutes) {
+        this.availabilityLockBeforeStartInMinutes = availabilityLockBeforeStartInMinutes;
+    }
 }

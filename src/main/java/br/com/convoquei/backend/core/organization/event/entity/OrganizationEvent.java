@@ -14,9 +14,12 @@ import br.com.convoquei.backend.core.organization.organization.entity.Organizati
 import br.com.convoquei.backend.sharedkernel.model.valueobject.RuleResult;
 import br.com.convoquei.backend.core.organization.event.util.OrganizationEventHelper;
 import jakarta.persistence.*;
+import org.aspectj.weaver.ast.Or;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -42,6 +45,13 @@ public class OrganizationEvent extends BaseEntity {
             foreignKey = @ForeignKey(name = "fk_organization_event_created_by_member")
     )
     private OrganizationMember createdBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "cancelled_by_member_id",
+            foreignKey = @ForeignKey(name = "fk_organization_event_cancelled_by_member")
+    )
+    private OrganizationMember cancelledBy;
 
     @Column(name = "start_at", nullable = false, columnDefinition = "TIMESTAMPTZ")
     private OffsetDateTime startAt;
@@ -83,6 +93,8 @@ public class OrganizationEvent extends BaseEntity {
         if (startAt.isAfter(endAt)) {
             throw new DomainBusinessRuleException("A data de início não pode ser posterior à data de término.");
         }
+
+        validateAvailabilityLock(configuration, startAt);
 
         this.organization = organization;
         this.createdBy = createdBy;
@@ -129,6 +141,24 @@ public class OrganizationEvent extends BaseEntity {
         return calledFunctions;
     }
 
+    public void update(OrganizationEventConfiguration newConfiguration, OffsetDateTime newStartAt, OffsetDateTime newEndAt) {
+        if (status != OrganizationEventStatus.SCHEDULED) {
+            throw new DomainBusinessRuleException("Somente eventos agendados podem ser editados.");
+        }
+
+        if (newStartAt.isAfter(newEndAt)) {
+            throw new DomainBusinessRuleException("A data de início não pode ser posterior à data de término.");
+        }
+
+        validateAvailabilityLock(newConfiguration, newStartAt);
+
+        this.configuration = newConfiguration;
+        this.startAt = newStartAt;
+        this.endAt = newEndAt;
+        this.calledGroups.clear();
+        this.calledFunctions.clear();
+    }
+
     public void addCalledGroups(OrganizationGroup group) {
 
         if (configuration.getCallMode() != OrganizationEventCallMode.ONLY_SPECIFIED_GROUP_MEMBERS) {
@@ -167,6 +197,16 @@ public class OrganizationEvent extends BaseEntity {
                 );
 
         participants.add(participant);
+    }
+
+    public void syncParticipants() {
+        participants.removeIf(p -> !canMemberParticipate(p.getMember()).success());
+
+        organization.getMembers().stream()
+                .filter(m -> m.getStatus() == OrganizationMemberStatus.ACTIVE)
+                .filter(m -> canMemberParticipate(m).success())
+                .filter(m -> findParticipantByMemberId(m.getId()).isEmpty())
+                .forEach(this::addParticipant);
     }
 
     public void removeParticipant(OrganizationMember member) {
@@ -236,6 +276,7 @@ public class OrganizationEvent extends BaseEntity {
         }
 
         this.allowAssignments = false;
+        this.configuration.setAvailabilityLockBeforeStartInMinutes(0);
 
         processAutomaticAssignmentsParticipants();
 
@@ -296,10 +337,8 @@ public class OrganizationEvent extends BaseEntity {
             }
 
             participant.assignFunction(function);
-            participant.setStatus(OrganizationEventParticipantStatus.AWAITING_ASSIGNMENT);
         } else if (!available) {
             participant.assignFunction(null);
-            participant.setStatus(OrganizationEventParticipantStatus.PENDING);
         }
 
         processAssignmentForParticipant(participant);
@@ -318,14 +357,59 @@ public class OrganizationEvent extends BaseEntity {
     }
 
     public void processAssignmentForParticipant(OrganizationEventParticipant participant) {
-        if (status != OrganizationEventStatus.SCHEDULED) {
-            return;
-        }
-
         Map<UUID, OrganizationEventCalledFunction> calledFunctionsByFunctionId = calledFunctions.stream()
                 .collect(Collectors.toMap(cf -> cf.getFunction().getId(), cf -> cf));
 
         processParticipantAssignment(participant, calledFunctionsByFunctionId);
+    }
+
+    public void cancel(OrganizationMember cancelledBy) {
+        if (status != OrganizationEventStatus.SCHEDULED) {
+            throw new DomainBusinessRuleException("Somente eventos agendados podem ser cancelados.");
+        }
+
+        this.status = OrganizationEventStatus.CANCELED;
+        this.allowAssignments = false;
+        this.cancelledBy = cancelledBy;
+    }
+
+    public void reopenAssignments() {
+        if (status != OrganizationEventStatus.SCHEDULED) {
+            throw new DomainBusinessRuleException("Somente eventos agendados podem ter a escala reaberta.");
+        }
+
+        this.allowAssignments = true;
+        this.configuration = new OrganizationEventConfiguration(
+                configuration.getName(),
+                configuration.getDescription(),
+                configuration.getLocation(),
+                configuration.getAssignmentMode(),
+                configuration.getCallMode(),
+                configuration.getFunctionCallMode(),
+                0
+        );
+
+        this.participants.stream()
+                .filter(p -> p.getStatus() == OrganizationEventParticipantStatus.EXPIRED)
+                .forEach(p -> p.setStatus(OrganizationEventParticipantStatus.PENDING));
+    }
+
+    public void lockAssignments() {
+        if (status != OrganizationEventStatus.SCHEDULED) {
+            throw new DomainBusinessRuleException("Somente eventos agendados podem ter a escala travada.");
+        }
+        if (!allowAssignments) {
+            throw new DomainBusinessRuleException("A escala deste evento já está travada.");
+        }
+
+        this.allowAssignments = false;
+        this.participants.stream()
+                .filter(p -> p.getStatus() == OrganizationEventParticipantStatus.PENDING)
+                .forEach(p -> p.setStatus(OrganizationEventParticipantStatus.EXPIRED));
+    }
+
+    public OrganizationMember getCancelledBy() {
+        return cancelledBy;
     }
 
     private void markParticipantsAsNotAssigned() {
@@ -344,12 +428,13 @@ public class OrganizationEvent extends BaseEntity {
     }
 
     private void processParticipantAssignment(OrganizationEventParticipant participant, Map<UUID, OrganizationEventCalledFunction> calledFunctionsByFunctionId) {
-        if (participant.getAvailabilityStatus() != OrganizationEventParticipantAvailabilityStatus.AVAILABLE) {
-            OrganizationEventParticipantStatus newStatus =
-                    participant.getAvailabilityStatus() == OrganizationEventParticipantAvailabilityStatus.NOT_ANSWERED
-                            ? OrganizationEventParticipantStatus.EXPIRED
-                            : OrganizationEventParticipantStatus.NOT_ASSIGNED;
-            participant.setStatus(newStatus);
+
+        if (participant.getAvailabilityStatus() == OrganizationEventParticipantAvailabilityStatus.NOT_ANSWERED) {
+            participant.setStatus(OrganizationEventParticipantStatus.EXPIRED);
+            return;
+        }
+        else if(participant.getAvailabilityStatus() == OrganizationEventParticipantAvailabilityStatus.UNAVAILABLE) {
+            participant.setStatus(OrganizationEventParticipantStatus.PENDING);
             return;
         }
 
@@ -378,7 +463,35 @@ public class OrganizationEvent extends BaseEntity {
             return;
         }
 
-        participant.setStatus(OrganizationEventParticipantStatus.NOT_ASSIGNED);
+        participant.setStatus(OrganizationEventParticipantStatus.AWAITING_ASSIGNMENT);
+    }
+
+    private void validateAvailabilityLock(OrganizationEventConfiguration configuration, OffsetDateTime startAt) {
+        int minutesLockBeforeStart = configuration.getAvailabilityLockBeforeStartInMinutes();
+
+        if (minutesLockBeforeStart > 0) {
+            if (!allowAssignments)
+                throw new DomainBusinessRuleException("Não é possível alterar o bloqueio de disponibilidade para este evento porque ele já está com as respostas de disponibilidade travadas.");
+
+            OffsetDateTime lockMoment = startAt.minusMinutes(minutesLockBeforeStart);
+            OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+            OffsetDateTime minimumLockMomentAllowed = now.plusMinutes(5);
+
+            if (lockMoment.isBefore(minimumLockMomentAllowed)) {
+                long maxAllowedMinutes = ChronoUnit.MINUTES.between(now, startAt) - 5;
+
+                long days = maxAllowedMinutes / (60 * 24);
+                long hours = (maxAllowedMinutes % (60 * 24)) / 60;
+                long minutes = maxAllowedMinutes % 60;
+
+                StringBuilder duration = new StringBuilder();
+                if (days > 0)    duration.append(days).append(days == 1 ? " dia" : " dias");
+                if (hours > 0)   duration.append(!duration.isEmpty() ? ", " : "").append(hours).append(hours == 1 ? " hora" : " horas");
+                if (minutes > 0) duration.append(!duration.isEmpty() ? " e " : "").append(minutes).append(minutes == 1 ? " minuto" : " minutos");
+
+                throw new DomainBusinessRuleException(String.format("O máximo permitido para o bloqueio de disponibilidade deste evento é de %s.", duration));
+            }
+        }
     }
 
     private boolean assignParticipantWithFunction(OrganizationEventParticipant participant, OrganizationEventCalledFunction calledFunction) {
