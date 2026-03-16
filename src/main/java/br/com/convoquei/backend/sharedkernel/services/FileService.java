@@ -8,8 +8,6 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.UUID;
 
 @Service
 public class FileService {
@@ -24,7 +22,6 @@ public class FileService {
     }
 
     public String uploadImage(MultipartFile file, String fileName) throws IOException {
-
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(fileName)
