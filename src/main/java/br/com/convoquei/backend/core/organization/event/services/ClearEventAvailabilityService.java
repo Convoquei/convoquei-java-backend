@@ -8,7 +8,6 @@ import br.com.convoquei.backend.core.user.provider.CurrentUserProvider;
 import br.com.convoquei.backend.sharedkernel.exceptions.DomainNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.UUID;
 
 @Service

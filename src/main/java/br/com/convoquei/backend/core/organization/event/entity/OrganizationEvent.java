@@ -276,7 +276,15 @@ public class OrganizationEvent extends BaseEntity {
         }
 
         this.allowAssignments = false;
-        this.configuration.setAvailabilityLockBeforeStartInMinutes(0);
+        this.configuration = new OrganizationEventConfiguration(
+                configuration.getName(),
+                configuration.getDescription(),
+                configuration.getLocation(),
+                configuration.getAssignmentMode(),
+                configuration.getCallMode(),
+                configuration.getFunctionCallMode(),
+                0
+        );
 
         processAutomaticAssignmentsParticipants();
 
@@ -337,7 +345,7 @@ public class OrganizationEvent extends BaseEntity {
             }
 
             participant.assignFunction(function);
-        } else if (!available) {
+        } else {
             participant.assignFunction(null);
         }
 

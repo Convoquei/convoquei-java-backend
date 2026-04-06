@@ -26,7 +26,7 @@ public class OrganizationEventStartHandler implements ConvoqueiJobHandler {
     @Override
     @Transactional
     public void handle() throws Exception {
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
 
         List<OrganizationEvent> events = organizationEventRepository.findByStatusAndStartAtLessThanEqualAndEndAtGreaterThan(OrganizationEventStatus.SCHEDULED, now, now);
 

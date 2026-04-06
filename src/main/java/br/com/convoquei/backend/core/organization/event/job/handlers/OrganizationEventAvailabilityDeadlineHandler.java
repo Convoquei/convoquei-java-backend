@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-
 @Service
 public class OrganizationEventAvailabilityDeadlineHandler implements ConvoqueiJobHandler {
 
@@ -26,7 +25,7 @@ public class OrganizationEventAvailabilityDeadlineHandler implements ConvoqueiJo
     @Transactional
     public void handle() {
 
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
 
         List<OrganizationEvent> events = organizationEventRepository.findScheduledEventsWithExpiredAvailabilityLock(now);
 

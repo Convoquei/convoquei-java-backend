@@ -27,7 +27,7 @@ public class OrganizationEventCompleteHandler implements ConvoqueiJobHandler {
     @Transactional
     public void handle() {
 
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
 
         List<OrganizationEvent> events =
                 organizationEventRepository.findByStatusNotInAndEndAtLessThanEqual(

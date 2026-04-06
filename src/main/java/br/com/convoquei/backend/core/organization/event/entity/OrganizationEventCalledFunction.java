@@ -13,8 +13,8 @@ public class OrganizationEventCalledFunction extends BaseEntity {
     }
 
     public OrganizationEventCalledFunction(OrganizationEvent event, OrganizationFunction function, int minMembers, Integer maxMembers, OrganizationEventAssignmentMode assignmentMode) {
-        if (minMembers < 0) {
-            throw new DomainBusinessRuleException("O número mínimo de membros deve ser maior ou igual a zero.");
+        if (minMembers < 1) {
+            throw new DomainBusinessRuleException("O número mínimo de membros deve ser maior ou igual a um.");
         }
         if (maxMembers != null && maxMembers < minMembers) {
             throw new DomainBusinessRuleException("O número máximo de membros deve ser maior ou igual ao número mínimo de membros.");
