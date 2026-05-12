@@ -7,6 +7,8 @@ import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventP
 import br.com.convoquei.backend.core.organization.group.entity.OrganizationGroup;
 import br.com.convoquei.backend.core.organization.member.entity.OrganizationMember;
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "organization_event_participant")
@@ -33,6 +35,7 @@ public class OrganizationEventParticipant extends BaseEntity {
             name = "organization_function_id",
             foreignKey = @ForeignKey(name = "fk_organization_event_participant_function")
     )
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private OrganizationFunction function;
 
     @Column(name = "display_name_snapshot", length = 70)

@@ -13,7 +13,7 @@ public class OrganizationEventConfiguration {
     @Column(name = "name", nullable = false, length = 70)
     private String name;
 
-    @Column(name = "description", nullable = false, length = 2000)
+    @Column(name = "description", length = 2000)
     private String description;
 
     @Column(name = "location", nullable = false, length = 250)

@@ -32,8 +32,11 @@ public class OrganizationEventController {
     public final UpdateOrganizationEventService updateOrganizationEventService;
     public final ReopenOrganizationEventAssignmentsService reopenOrganizationEventAssignmentsService;
     public final LockOrganizationEventAssignmentsService lockOrganizationEventAssignmentsService;
+    public final ApproveParticipantAssignmentService approveParticipantAssignmentService;
+    public final RemoveParticipantAssignmentService removeParticipantAssignmentService;
+    public final AssignParticipantService assignParticipantService;
 
-    public OrganizationEventController(CreateOrganizationEventService createOrganizationService, CancelOrganizationEventService cancelOrganizationEventService, OrganizationEventMembershipService organizationEventMembershipService, RespondEventAvailabilityService respondEventAvailabilityService, ClearEventAvailabilityService clearEventAvailabilityService, GetOrganizationEventDetailService getOrganizationEventDetailService, UpdateOrganizationEventService updateOrganizationEventService, ReopenOrganizationEventAssignmentsService reopenOrganizationEventAssignmentsService, LockOrganizationEventAssignmentsService lockOrganizationEventAssignmentsService) {
+    public OrganizationEventController(CreateOrganizationEventService createOrganizationService, CancelOrganizationEventService cancelOrganizationEventService, OrganizationEventMembershipService organizationEventMembershipService, RespondEventAvailabilityService respondEventAvailabilityService, ClearEventAvailabilityService clearEventAvailabilityService, GetOrganizationEventDetailService getOrganizationEventDetailService, UpdateOrganizationEventService updateOrganizationEventService, ReopenOrganizationEventAssignmentsService reopenOrganizationEventAssignmentsService, LockOrganizationEventAssignmentsService lockOrganizationEventAssignmentsService, ApproveParticipantAssignmentService approveParticipantAssignmentService, RemoveParticipantAssignmentService removeParticipantAssignmentService, AssignParticipantService assignParticipantService) {
         this.createOrganizationService = createOrganizationService;
         this.cancelOrganizationEventService = cancelOrganizationEventService;
         this.organizationEventMembershipService = organizationEventMembershipService;
@@ -43,6 +46,9 @@ public class OrganizationEventController {
         this.updateOrganizationEventService = updateOrganizationEventService;
         this.reopenOrganizationEventAssignmentsService = reopenOrganizationEventAssignmentsService;
         this.lockOrganizationEventAssignmentsService = lockOrganizationEventAssignmentsService;
+        this.approveParticipantAssignmentService = approveParticipantAssignmentService;
+        this.removeParticipantAssignmentService = removeParticipantAssignmentService;
+        this.assignParticipantService = assignParticipantService;
     }
 
     @PostMapping
@@ -122,5 +128,35 @@ public class OrganizationEventController {
             @PathVariable UUID organizationId,
             @PathVariable UUID eventId) {
         lockOrganizationEventAssignmentsService.execute(organizationId, eventId);
+    }
+
+    @PostMapping("/{eventId}/participants/{participantId}/assign")
+    @RequiredOrganizationPermission(OrganizationPermission.MANAGE_EVENT_SCHEDULE)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void assignParticipant(
+            @PathVariable UUID organizationId,
+            @PathVariable UUID eventId,
+            @PathVariable UUID participantId) {
+        assignParticipantService.execute(organizationId, eventId, participantId);
+    }
+
+    @PostMapping("/{eventId}/participants/{participantId}/assignment/approve")
+    @RequiredOrganizationPermission(OrganizationPermission.MANAGE_EVENT_SCHEDULE)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void approveParticipantAssignment(
+            @PathVariable UUID organizationId,
+            @PathVariable UUID eventId,
+            @PathVariable UUID participantId) {
+        approveParticipantAssignmentService.execute(organizationId, eventId, participantId);
+    }
+
+    @DeleteMapping("/{eventId}/participants/{participantId}/assignment")
+    @RequiredOrganizationPermission(OrganizationPermission.MANAGE_EVENT_SCHEDULE)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeParticipantAssignment(
+            @PathVariable UUID organizationId,
+            @PathVariable UUID eventId,
+            @PathVariable UUID participantId) {
+        removeParticipantAssignmentService.execute(organizationId, eventId, participantId);
     }
 }

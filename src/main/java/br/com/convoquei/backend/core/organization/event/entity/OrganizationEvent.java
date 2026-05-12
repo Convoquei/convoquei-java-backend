@@ -94,6 +94,8 @@ public class OrganizationEvent extends BaseEntity {
             throw new DomainBusinessRuleException("A data de início não pode ser posterior à data de término.");
         }
 
+        this.allowAssignments = true;
+
         validateAvailabilityLock(configuration, startAt);
 
         this.organization = organization;
@@ -101,7 +103,6 @@ public class OrganizationEvent extends BaseEntity {
         this.configuration = configuration;
         this.startAt = startAt;
         this.endAt = endAt;
-        this.allowAssignments = true;
         this.status = OrganizationEventStatus.SCHEDULED;
     }
 
@@ -259,6 +260,92 @@ public class OrganizationEvent extends BaseEntity {
                 .findFirst();
     }
 
+    public Optional<OrganizationEventParticipant> findParticipantById(UUID participantId) {
+        return participants.stream()
+                .filter(p -> participantId.equals(p.getId()))
+                .findFirst();
+    }
+
+    public void approveParticipantAssignment(UUID participantId) {
+        if (status != OrganizationEventStatus.SCHEDULED) {
+            throw new DomainBusinessRuleException("Somente eventos agendados podem ter a escala aprovada.");
+        }
+
+        OrganizationEventParticipant participant = findParticipantById(participantId)
+                .orElseThrow(() -> new DomainBusinessRuleException("Participante não encontrado neste evento."));
+
+        if (participant.getStatus() != OrganizationEventParticipantStatus.AWAITING_ASSIGNMENT) {
+            throw new DomainBusinessRuleException("Somente participantes aguardando aprovação podem ter a escala aprovada.");
+        }
+
+        OrganizationFunction function = participant.getFunction();
+
+        if (function != null) {
+            OrganizationEventCalledFunction calledFunction = calledFunctions.stream()
+                    .filter(cf -> cf.getFunction().getId().equals(function.getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (calledFunction != null && !assignParticipantWithFunction(participant, calledFunction)) {
+                throw new DomainBusinessRuleException("Não é possível aprovar a escala pois o limite máximo de membros para esta função já foi atingido.");
+            } else if (calledFunction == null) {
+                participant.setStatus(OrganizationEventParticipantStatus.ASSIGNED);
+            }
+        } else {
+            participant.setStatus(OrganizationEventParticipantStatus.ASSIGNED);
+        }
+    }
+
+    public void assignParticipant(UUID participantId) {
+        if (status != OrganizationEventStatus.SCHEDULED) {
+            throw new DomainBusinessRuleException("Somente eventos agendados podem ter participantes escalados.");
+        }
+
+        OrganizationEventParticipant participant = findParticipantById(participantId)
+                .orElseThrow(() -> new DomainBusinessRuleException("Participante não encontrado neste evento."));
+
+        if (participant.getStatus() == OrganizationEventParticipantStatus.ASSIGNED) {
+            throw new DomainBusinessRuleException("Este participante já está escalado.");
+        }
+
+        if (participant.getStatus() == OrganizationEventParticipantStatus.AWAITING_ASSIGNMENT) {
+            throw new DomainBusinessRuleException("Este participante está aguardando aprovação de escala. Use a ação de aprovar.");
+        }
+
+        OrganizationFunction function = participant.getFunction();
+
+        if (function != null) {
+            OrganizationEventCalledFunction calledFunction = calledFunctions.stream()
+                    .filter(cf -> cf.getFunction().getId().equals(function.getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (calledFunction != null && !assignParticipantWithFunction(participant, calledFunction)) {
+                throw new DomainBusinessRuleException("Não é possível escalar o participante pois o limite máximo de membros para esta função já foi atingido.");
+            } else if (calledFunction == null) {
+                participant.setStatus(OrganizationEventParticipantStatus.ASSIGNED);
+            }
+        } else {
+            participant.setStatus(OrganizationEventParticipantStatus.ASSIGNED);
+        }
+    }
+
+    public void removeParticipantAssignment(UUID participantId) {
+        if (status != OrganizationEventStatus.SCHEDULED) {
+            throw new DomainBusinessRuleException("Somente eventos agendados podem ter a escala removida.");
+        }
+
+        OrganizationEventParticipant participant = findParticipantById(participantId)
+                .orElseThrow(() -> new DomainBusinessRuleException("Participante não encontrado neste evento."));
+
+        if (participant.getStatus() != OrganizationEventParticipantStatus.ASSIGNED
+                && participant.getStatus() != OrganizationEventParticipantStatus.AWAITING_ASSIGNMENT) {
+            throw new DomainBusinessRuleException("Somente participantes escalados ou aguardando aprovação podem ter a escala removida.");
+        }
+
+        participant.setStatus(OrganizationEventParticipantStatus.NOT_ASSIGNED);
+    }
+
     public OffsetDateTime getAvailabilityLockAt() {
         return startAt.minusMinutes(configuration.getAvailabilityLockBeforeStartInMinutes());
     }
@@ -353,6 +440,10 @@ public class OrganizationEvent extends BaseEntity {
     }
 
     public void clearAvailability(UUID memberId) {
+        if (status != OrganizationEventStatus.SCHEDULED) {
+            throw new DomainBusinessRuleException("Somente eventos agendados podem ter a disponibilidade limpa.");
+        }
+
         if (!allowAssignments) {
             throw new DomainBusinessRuleException("Este evento não está aceitando respostas de disponibilidade no momento.");
         }
