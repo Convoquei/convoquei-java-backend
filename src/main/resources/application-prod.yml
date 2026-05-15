@@ -1,0 +1,46 @@
+app:
+  jwt:
+    secret-base64: "${JWT_SECRET_BASE64}"
+    access-token-minutes: 60
+    refresh-token-days: 30
+
+cloudflare:
+  r2:
+    endpoint: "${CLOUDFLARE_R2_ENDPOINT}"
+    access-key: "${CLOUDFLARE_R2_ACCESS_KEY}"
+    secret-key: "${CLOUDFLARE_R2_SECRET_KEY}"
+    bucket-name: "${CLOUDFLARE_R2_BUCKET_NAME}"
+
+spring:
+  datasource:
+    url: "${DATABASE_URL}"
+    username: "${DATABASE_USERNAME}"
+    password: "${DATABASE_PASSWORD}"
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+        use_sql_comments: false
+        show_sql: false
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"
+  endpoint:
+    health:
+      show-details: when-authorized
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
