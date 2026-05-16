@@ -1,6 +1,8 @@
 package br.com.convoquei.backend.app.security.aspect;
 
 import br.com.convoquei.backend.app.security.annotation.RequiredOrganizationPermission;
+import br.com.convoquei.backend.app.security.context.OrganizationContext;
+import br.com.convoquei.backend.core.organization.member.entity.OrganizationMember;
 import br.com.convoquei.backend.core.organization.role.services.OrganizationPermissionService;
 import br.com.convoquei.backend.core.user.provider.CurrentUserProvider;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,13 +18,16 @@ import java.util.UUID;
 public class OrganizationPermissionAspect {
 
     private final OrganizationPermissionService organizationPermissionService;
+    private final OrganizationContext organizationContext;
     private final HttpServletRequest request;
     private final CurrentUserProvider currentUserProvider;
 
     public OrganizationPermissionAspect(OrganizationPermissionService organizationPermissionService,
+                                        OrganizationContext organizationContext,
                                         HttpServletRequest request,
                                         CurrentUserProvider currentUserProvider) {
         this.organizationPermissionService = organizationPermissionService;
+        this.organizationContext = organizationContext;
         this.request = request;
         this.currentUserProvider = currentUserProvider;
     }
@@ -32,7 +37,10 @@ public class OrganizationPermissionAspect {
         UUID organizationId = resolveOrganizationId();
         UUID userId = currentUserProvider.requireUserId();
 
-        organizationPermissionService.assertHasPermission(organizationId, userId, requiredPermission.value());
+        OrganizationMember member = organizationPermissionService.requireAuthorizedMember(
+                organizationId, userId, requiredPermission.value());
+
+        organizationContext.setMember(member);
     }
 
     private UUID resolveOrganizationId() {

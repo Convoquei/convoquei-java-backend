@@ -8,7 +8,13 @@ import br.com.convoquei.backend.core.organization.function.api.dto.request.Creat
 import br.com.convoquei.backend.core.organization.function.api.dto.request.ListFunctionsRequest;
 import br.com.convoquei.backend.core.organization.function.api.dto.response.OrganizationFunctionMemberResponse;
 import br.com.convoquei.backend.core.organization.function.api.dto.response.OrganizationFunctionResponse;
-import br.com.convoquei.backend.core.organization.function.services.OrganizationFunctionService;
+import br.com.convoquei.backend.core.organization.function.usecase.AddOrganizationFunctionMemberUseCase;
+import br.com.convoquei.backend.core.organization.function.usecase.ClearOrganizationFunctionMembersUseCase;
+import br.com.convoquei.backend.core.organization.function.usecase.CreateOrganizationFunctionUseCase;
+import br.com.convoquei.backend.core.organization.function.usecase.DeleteOrganizationFunctionUseCase;
+import br.com.convoquei.backend.core.organization.function.usecase.GetOrganizationFunctionMembersUseCase;
+import br.com.convoquei.backend.core.organization.function.usecase.ListOrganizationFunctionsUseCase;
+import br.com.convoquei.backend.core.organization.function.usecase.RemoveOrganizationFunctionMemberUseCase;
 import br.com.convoquei.backend.core.organization.role.enums.OrganizationPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -25,10 +31,30 @@ import java.util.UUID;
 @RequestMapping("/api/v1/organizations/{organizationId}/functions")
 public class OrganizationFunctionController {
 
-    private final OrganizationFunctionService organizationFunctionService;
+    private final CreateOrganizationFunctionUseCase createOrganizationFunctionUseCase;
+    private final ListOrganizationFunctionsUseCase listOrganizationFunctionsUseCase;
+    private final GetOrganizationFunctionMembersUseCase getOrganizationFunctionMembersUseCase;
+    private final AddOrganizationFunctionMemberUseCase addOrganizationFunctionMemberUseCase;
+    private final RemoveOrganizationFunctionMemberUseCase removeOrganizationFunctionMemberUseCase;
+    private final ClearOrganizationFunctionMembersUseCase clearOrganizationFunctionMembersUseCase;
+    private final DeleteOrganizationFunctionUseCase deleteOrganizationFunctionUseCase;
 
-    public OrganizationFunctionController(OrganizationFunctionService organizationFunctionService) {
-        this.organizationFunctionService = organizationFunctionService;
+    public OrganizationFunctionController(
+            CreateOrganizationFunctionUseCase createOrganizationFunctionUseCase,
+            ListOrganizationFunctionsUseCase listOrganizationFunctionsUseCase,
+            GetOrganizationFunctionMembersUseCase getOrganizationFunctionMembersUseCase,
+            AddOrganizationFunctionMemberUseCase addOrganizationFunctionMemberUseCase,
+            RemoveOrganizationFunctionMemberUseCase removeOrganizationFunctionMemberUseCase,
+            ClearOrganizationFunctionMembersUseCase clearOrganizationFunctionMembersUseCase,
+            DeleteOrganizationFunctionUseCase deleteOrganizationFunctionUseCase
+    ) {
+        this.createOrganizationFunctionUseCase = createOrganizationFunctionUseCase;
+        this.listOrganizationFunctionsUseCase = listOrganizationFunctionsUseCase;
+        this.getOrganizationFunctionMembersUseCase = getOrganizationFunctionMembersUseCase;
+        this.addOrganizationFunctionMemberUseCase = addOrganizationFunctionMemberUseCase;
+        this.removeOrganizationFunctionMemberUseCase = removeOrganizationFunctionMemberUseCase;
+        this.clearOrganizationFunctionMembersUseCase = clearOrganizationFunctionMembersUseCase;
+        this.deleteOrganizationFunctionUseCase = deleteOrganizationFunctionUseCase;
     }
 
     @GetMapping
@@ -42,7 +68,7 @@ public class OrganizationFunctionController {
             @PathVariable UUID organizationId,
             @Valid @ModelAttribute ListFunctionsRequest request
     ) {
-        return organizationFunctionService.listFunctions(organizationId, request);
+        return listOrganizationFunctionsUseCase.execute(organizationId, request);
     }
 
     @PostMapping
@@ -57,7 +83,7 @@ public class OrganizationFunctionController {
             @PathVariable UUID organizationId,
             @RequestBody @Valid CreateFunctionRequest request
     ) {
-        return organizationFunctionService.createFunction(organizationId, request);
+        return createOrganizationFunctionUseCase.execute(organizationId, request);
     }
 
     @DeleteMapping("/{functionId}")
@@ -71,7 +97,7 @@ public class OrganizationFunctionController {
             @PathVariable UUID organizationId,
             @PathVariable UUID functionId
     ) {
-        organizationFunctionService.deleteFunction(organizationId, functionId);
+        deleteOrganizationFunctionUseCase.execute(organizationId, functionId);
     }
 
     @GetMapping("/{functionId}/members")
@@ -86,7 +112,7 @@ public class OrganizationFunctionController {
             @PathVariable UUID functionId,
             @Valid @ModelAttribute PagedRequest request
     ) {
-        return organizationFunctionService.getFunctionMembers(organizationId, functionId, request);
+        return getOrganizationFunctionMembersUseCase.execute(organizationId, functionId, request);
     }
 
     @PostMapping("/{functionId}/members")
@@ -101,7 +127,7 @@ public class OrganizationFunctionController {
             @PathVariable UUID functionId,
             @RequestBody @Valid AddFunctionMemberRequest request
     ) {
-        return organizationFunctionService.addMember(organizationId, functionId, request);
+        return addOrganizationFunctionMemberUseCase.execute(organizationId, functionId, request);
     }
 
     @DeleteMapping("/{functionId}/members/{id}")
@@ -116,7 +142,7 @@ public class OrganizationFunctionController {
             @PathVariable UUID functionId,
             @PathVariable UUID id
     ) {
-        return organizationFunctionService.removeMember(organizationId, functionId, id);
+        return removeOrganizationFunctionMemberUseCase.execute(organizationId, functionId, id);
     }
 
     @DeleteMapping("/{functionId}/members")
@@ -130,6 +156,6 @@ public class OrganizationFunctionController {
             @PathVariable UUID organizationId,
             @PathVariable UUID functionId
     ) {
-        return organizationFunctionService.clearFunctionMembers(organizationId, functionId);
+        return clearOrganizationFunctionMembersUseCase.execute(organizationId, functionId);
     }
 }

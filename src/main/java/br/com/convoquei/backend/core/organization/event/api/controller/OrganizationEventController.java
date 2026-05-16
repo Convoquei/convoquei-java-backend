@@ -23,18 +23,18 @@ import java.util.UUID;
 @RequestMapping("/api/v1/organizations/{organizationId}/events")
 public class OrganizationEventController {
 
-    public final CreateOrganizationEventService createOrganizationService;
-    public final CancelOrganizationEventService cancelOrganizationEventService;
-    public final OrganizationEventMembershipService organizationEventMembershipService;
-    public final RespondEventAvailabilityService respondEventAvailabilityService;
-    public final ClearEventAvailabilityService clearEventAvailabilityService;
-    public final GetOrganizationEventDetailService getOrganizationEventDetailService;
-    public final UpdateOrganizationEventService updateOrganizationEventService;
-    public final ReopenOrganizationEventAssignmentsService reopenOrganizationEventAssignmentsService;
-    public final LockOrganizationEventAssignmentsService lockOrganizationEventAssignmentsService;
-    public final ApproveParticipantAssignmentService approveParticipantAssignmentService;
-    public final RemoveParticipantAssignmentService removeParticipantAssignmentService;
-    public final AssignParticipantService assignParticipantService;
+    private final CreateOrganizationEventService createOrganizationService;
+    private final CancelOrganizationEventService cancelOrganizationEventService;
+    private final OrganizationEventMembershipService organizationEventMembershipService;
+    private final RespondEventAvailabilityService respondEventAvailabilityService;
+    private final ClearEventAvailabilityService clearEventAvailabilityService;
+    private final GetOrganizationEventDetailService getOrganizationEventDetailService;
+    private final UpdateOrganizationEventService updateOrganizationEventService;
+    private final ReopenOrganizationEventAssignmentsService reopenOrganizationEventAssignmentsService;
+    private final LockOrganizationEventAssignmentsService lockOrganizationEventAssignmentsService;
+    private final ApproveParticipantAssignmentService approveParticipantAssignmentService;
+    private final RemoveParticipantAssignmentService removeParticipantAssignmentService;
+    private final AssignParticipantService assignParticipantService;
 
     public OrganizationEventController(CreateOrganizationEventService createOrganizationService, CancelOrganizationEventService cancelOrganizationEventService, OrganizationEventMembershipService organizationEventMembershipService, RespondEventAvailabilityService respondEventAvailabilityService, ClearEventAvailabilityService clearEventAvailabilityService, GetOrganizationEventDetailService getOrganizationEventDetailService, UpdateOrganizationEventService updateOrganizationEventService, ReopenOrganizationEventAssignmentsService reopenOrganizationEventAssignmentsService, LockOrganizationEventAssignmentsService lockOrganizationEventAssignmentsService, ApproveParticipantAssignmentService approveParticipantAssignmentService, RemoveParticipantAssignmentService removeParticipantAssignmentService, AssignParticipantService assignParticipantService) {
         this.createOrganizationService = createOrganizationService;

@@ -1,5 +1,6 @@
 package br.com.convoquei.backend.core.organization.function.repository;
 
+import br.com.convoquei.backend.sharedkernel.exceptions.DomainNotFoundException;
 import br.com.convoquei.backend.sharedkernel.repository.BaseRepository;
 import br.com.convoquei.backend.core.organization.function.entity.OrganizationFunction;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,11 @@ public interface OrganizationFunctionRepository extends BaseRepository<Organizat
 
     @EntityGraph(attributePaths = {"members", "members.organizationMember", "members.organizationMember.user"})
     Optional<OrganizationFunction> findByIdAndOrganizationId(UUID id, UUID organizationId);
+
+    default OrganizationFunction requireByIdAndOrganizationId(UUID id, UUID organizationId) {
+        return findByIdAndOrganizationId(id, organizationId)
+                .orElseThrow(() -> new DomainNotFoundException("Função não encontrada nessa organização."));
+    }
 
     Page<OrganizationFunction> findAllByOrganizationId(UUID organizationId, Pageable pageable);
 

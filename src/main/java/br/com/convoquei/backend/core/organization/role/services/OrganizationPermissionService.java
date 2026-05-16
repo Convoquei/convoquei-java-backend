@@ -17,13 +17,15 @@ public class OrganizationPermissionService {
         this.organizationMemberRepository = organizationMemberRepository;
     }
 
-    public void assertHasPermission(UUID organizationId, UUID userId, OrganizationPermission requiredPermission) throws AccessDeniedException {
+    public OrganizationMember requireAuthorizedMember(UUID organizationId, UUID userId, OrganizationPermission requiredPermission) throws AccessDeniedException {
         OrganizationMember member = organizationMemberRepository
                 .findByOrganizationIdAndUserIdAndStatus(organizationId, userId, OrganizationMemberStatus.ACTIVE)
                 .orElseThrow(() -> new AccessDeniedException("Você não é um membro ativo da organização."));
 
-        if(!member.hasPermission(requiredPermission)) {
+        if (!member.hasPermission(requiredPermission)) {
             throw new AccessDeniedException("Requer " + requiredPermission.getDescription().toLowerCase());
         }
+
+        return member;
     }
 }

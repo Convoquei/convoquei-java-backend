@@ -4,7 +4,13 @@
       "Bash(git add:*)",
       "Bash(git commit -m ':*)",
       "Bash(xargs grep:*)",
-      "Bash(./mvnw compile:*)"
+      "Bash(./mvnw compile:*)",
+      "Bash(mvn -q compile)",
+      "PowerShell(mvn *)",
+      "PowerShell(Get-Command *)",
+      "PowerShell(.\\\\mvnw.cmd -q compile 2>&1 | Select-Object -Last 30)",
+      "PowerShell(Remove-Item *)",
+      "PowerShell(.\\\\mvnw.cmd -q compile 2>&1 | Select-Object -Last 40)"
     ]
   }
 }

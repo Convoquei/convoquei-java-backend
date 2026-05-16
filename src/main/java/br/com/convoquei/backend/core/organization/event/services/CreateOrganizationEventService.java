@@ -6,7 +6,6 @@ import br.com.convoquei.backend.core.organization.event.entity.OrganizationEvent
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventCallMode;
 import br.com.convoquei.backend.core.organization.event.repository.OrganizationEventRepository;
 import br.com.convoquei.backend.core.organization.event.valueobject.OrganizationEventConfiguration;
-import br.com.convoquei.backend.core.organization.group.repository.OrganizationGroupRepository;
 import br.com.convoquei.backend.core.organization.member.entity.OrganizationMember;
 import br.com.convoquei.backend.core.organization.member.enums.OrganizationMemberStatus;
 import br.com.convoquei.backend.core.organization.organization.entity.Organization;
@@ -22,7 +21,7 @@ public class CreateOrganizationEventService {
     private final CurrentUserProvider currentUserProvider;
     private final OrganizationEventRepository organizationEventRepository;
 
-    public CreateOrganizationEventService(CurrentUserProvider currentUserProvider, OrganizationEventRepository organizationEventRepository, OrganizationGroupRepository organizationGroupRepository) {
+    public CreateOrganizationEventService(CurrentUserProvider currentUserProvider, OrganizationEventRepository organizationEventRepository) {
         this.currentUserProvider = currentUserProvider;
         this.organizationEventRepository = organizationEventRepository;
     }

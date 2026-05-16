@@ -14,7 +14,6 @@ import br.com.convoquei.backend.core.organization.organization.entity.Organizati
 import br.com.convoquei.backend.sharedkernel.model.valueobject.RuleResult;
 import br.com.convoquei.backend.core.organization.event.util.OrganizationEventHelper;
 import jakarta.persistence.*;
-import org.aspectj.weaver.ast.Or;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;

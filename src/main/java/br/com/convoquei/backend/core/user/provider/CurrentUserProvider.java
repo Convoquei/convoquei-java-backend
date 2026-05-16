@@ -24,13 +24,7 @@ public class CurrentUserProvider {
     }
 
     public Optional<UUID> userId() {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if(!(auth instanceof JwtAuthenticationToken jwtAuth)) {
-            return Optional.empty();
-        }
-
-        String uuid = jwtAuth.getToken().getClaimAsString("uid");
-        return Optional.ofNullable(uuid).map(UUID::fromString);
+        return extractUserIdFromAuthentication();
     }
 
     public UUID requireUserId() {
