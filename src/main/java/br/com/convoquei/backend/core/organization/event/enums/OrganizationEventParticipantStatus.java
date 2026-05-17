@@ -2,6 +2,7 @@ package br.com.convoquei.backend.core.organization.event.enums;
 
 public enum OrganizationEventParticipantStatus {
     PENDING("Pendente"),
+    INVITED("Convidado"),
     AWAITING_ASSIGNMENT("Aguardando aprovação da escala"),
     ASSIGNED("Escalado"),
     NOT_ASSIGNED("Não escalado"),
