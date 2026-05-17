@@ -4,7 +4,9 @@ import br.com.convoquei.backend.app.api.dto.response.PagedResponse;
 import br.com.convoquei.backend.app.security.annotation.RequiredOrganizationPermission;
 import br.com.convoquei.backend.core.organization.function.api.dto.request.UpdateMemberFunctionsRequest;
 import br.com.convoquei.backend.core.organization.member.api.dto.request.ListMembersByOrganizationRequest;
+import br.com.convoquei.backend.core.organization.member.api.dto.request.MemberAvailabilityRequest;
 import br.com.convoquei.backend.core.organization.member.api.dto.request.UpdateMemberGroupsRequest;
+import br.com.convoquei.backend.core.organization.member.api.dto.response.MemberAvailabilityEventResponse;
 import br.com.convoquei.backend.core.organization.member.api.dto.response.MyMemberhipResponse;
 import br.com.convoquei.backend.core.organization.member.api.dto.response.OrganizationMemberResponse;
 import br.com.convoquei.backend.core.organization.member.services.OrganizationMemberService;
@@ -17,6 +19,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -75,6 +78,33 @@ public class OrganizationMemberController {
             @RequestBody @Valid UpdateMemberGroupsRequest request
     ) {
         return organizationMemberService.updateMemberGroups(organizationId, memberId, request);
+    }
+
+    @GetMapping("/me/availability")
+    @Operation(summary = "Obter janela de disponibilidade do usuário autenticado")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Eventos sobrepostos retornados com sucesso")
+    })
+    @RequiredOrganizationPermission(OrganizationPermission.MEMBER)
+    public List<MemberAvailabilityEventResponse> getMyAvailability(
+            @PathVariable UUID organizationId,
+            @Valid @ModelAttribute MemberAvailabilityRequest request
+    ) {
+        return organizationMemberService.getMyAvailability(organizationId, request);
+    }
+
+    @GetMapping("/{memberId}/availability")
+    @Operation(summary = "Obter janela de disponibilidade de um membro")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Eventos sobrepostos retornados com sucesso")
+    })
+    @RequiredOrganizationPermission(OrganizationPermission.MEMBER)
+    public List<MemberAvailabilityEventResponse> getMemberAvailability(
+            @PathVariable UUID organizationId,
+            @PathVariable UUID memberId,
+            @Valid @ModelAttribute MemberAvailabilityRequest request
+    ) {
+        return organizationMemberService.getMemberAvailability(organizationId, memberId, request);
     }
 
     @PutMapping("/{memberId}/functions")

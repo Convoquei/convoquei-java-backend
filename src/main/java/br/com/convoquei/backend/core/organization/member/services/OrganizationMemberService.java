@@ -14,8 +14,11 @@ import br.com.convoquei.backend.core.organization.group.entity.OrganizationGroup
 import br.com.convoquei.backend.core.organization.group.entity.OrganizationGroupParticipant;
 import br.com.convoquei.backend.core.organization.group.repository.OrganizationGroupParticipantRepository;
 import br.com.convoquei.backend.core.organization.group.repository.OrganizationGroupRepository;
+import br.com.convoquei.backend.core.organization.event.repository.OrganizationEventRepository;
 import br.com.convoquei.backend.core.organization.member.api.dto.request.ListMembersByOrganizationRequest;
+import br.com.convoquei.backend.core.organization.member.api.dto.request.MemberAvailabilityRequest;
 import br.com.convoquei.backend.core.organization.member.api.dto.request.UpdateMemberGroupsRequest;
+import br.com.convoquei.backend.core.organization.member.api.dto.response.MemberAvailabilityEventResponse;
 import br.com.convoquei.backend.core.organization.member.api.dto.response.MyMemberhipResponse;
 import br.com.convoquei.backend.core.organization.member.api.dto.response.OrganizationMemberResponse;
 import br.com.convoquei.backend.core.organization.member.entity.OrganizationMember;
@@ -41,6 +44,7 @@ public class OrganizationMemberService {
     private final OrganizationFunctionMemberRepository organizationFunctionMemberRepository;
     private final OrganizationFunctionRepository organizationFunctionRepository;
     private final SyncEventParticipantsService syncEventParticipantsService;
+    private final OrganizationEventRepository organizationEventRepository;
 
     public OrganizationMemberService(
             CurrentUserProvider currentUserProvider,
@@ -49,7 +53,8 @@ public class OrganizationMemberService {
             OrganizationGroupRepository organizationGroupRepository,
             OrganizationFunctionMemberRepository organizationFunctionMemberRepository,
             OrganizationFunctionRepository organizationFunctionRepository,
-            SyncEventParticipantsService syncEventParticipantsService
+            SyncEventParticipantsService syncEventParticipantsService,
+            OrganizationEventRepository organizationEventRepository
     ) {
         this.currentUserProvider = currentUserProvider;
         this.organizationMemberRepository = organizationMemberRepository;
@@ -58,6 +63,7 @@ public class OrganizationMemberService {
         this.organizationFunctionMemberRepository = organizationFunctionMemberRepository;
         this.organizationFunctionRepository = organizationFunctionRepository;
         this.syncEventParticipantsService = syncEventParticipantsService;
+        this.organizationEventRepository = organizationEventRepository;
     }
 
     public MyMemberhipResponse getMembership(UUID organizationId) {
@@ -183,6 +189,33 @@ public class OrganizationMemberService {
                 .toList();
 
         return OrganizationMemberResponse.buildFromMember(member, groupSummaries, List.of());
+    }
+
+    public List<MemberAvailabilityEventResponse> getMyAvailability(UUID organizationId, MemberAvailabilityRequest request) {
+        OrganizationMember member = currentUserProvider.requireOrganizationMembership(organizationId);
+        return fetchAvailability(organizationId, member.getId(), request);
+    }
+
+    public List<MemberAvailabilityEventResponse> getMemberAvailability(UUID organizationId, UUID memberId, MemberAvailabilityRequest request) {
+        organizationMemberRepository.findByIdAndOrganizationIdAndStatus(memberId, organizationId, OrganizationMemberStatus.ACTIVE)
+                .orElseThrow(() -> new DomainNotFoundException("Membro não encontrado nessa organização."));
+        return fetchAvailability(organizationId, memberId, request);
+    }
+
+    private List<MemberAvailabilityEventResponse> fetchAvailability(UUID organizationId, UUID memberId, MemberAvailabilityRequest request) {
+        return organizationEventRepository
+                .findOverlappingEventsForMember(organizationId, memberId, request.getStart(), request.getEnd())
+                .stream()
+                .map(view -> new MemberAvailabilityEventResponse(
+                        view.eventId(),
+                        view.name(),
+                        view.startAt(),
+                        view.endAt(),
+                        view.eventStatus(),
+                        view.participantStatus(),
+                        view.participantAvailabilityStatus()
+                ))
+                .toList();
     }
 
     @Transactional

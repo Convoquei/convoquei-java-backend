@@ -10,7 +10,10 @@
       "PowerShell(Get-Command *)",
       "PowerShell(.\\\\mvnw.cmd -q compile 2>&1 | Select-Object -Last 30)",
       "PowerShell(Remove-Item *)",
-      "PowerShell(.\\\\mvnw.cmd -q compile 2>&1 | Select-Object -Last 40)"
+      "PowerShell(.\\\\mvnw.cmd -q compile 2>&1 | Select-Object -Last 40)",
+      "Bash(Get-ChildItem -Path \"C:\\\\repo\\\\convoquei\\\\convoquei-java-backend\" -Recurse -Filter \"*.sql\")",
+      "Bash(Select-Object -First 20)",
+      "Bash(Get-ChildItem *)"
     ]
   }
 }

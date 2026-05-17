@@ -5,9 +5,14 @@ import br.com.convoquei.backend.core.organization.event.entity.OrganizationEvent
 import br.com.convoquei.backend.core.organization.event.entity.OrganizationEventParticipant;
 import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventAssignmentMode;
 import br.com.convoquei.backend.core.organization.event.repository.queries.FindMemberEventsQuery;
+import br.com.convoquei.backend.core.organization.event.repository.views.MemberAvailabilityEventView;
 import br.com.convoquei.backend.core.organization.event.repository.views.OrganizationEventCalledFunctionView;
 import br.com.convoquei.backend.core.organization.event.repository.views.OrganizationEventMemberView;
+import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventParticipantAvailabilityStatus;
+import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventParticipantStatus;
+import br.com.convoquei.backend.core.organization.event.enums.OrganizationEventStatus;
 import br.com.convoquei.backend.core.organization.function.entity.OrganizationFunction;
+import br.com.convoquei.backend.sharedkernel.helpers.DateConverter;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -16,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -262,5 +268,46 @@ public class OrganizationEventRepositoryImpl implements OrganizationEventReposit
         );
 
         return memberParticipant;
+    }
+
+    @Override
+    public List<MemberAvailabilityEventView> findOverlappingEventsForMember(
+            UUID organizationId,
+            UUID memberId,
+            OffsetDateTime start,
+            OffsetDateTime end
+    ) {
+        String sql = """
+                SELECT e.id, e.name, e.start_at, e.end_at, e.status,
+                       p.status AS participant_status,
+                       p.availability_status AS participant_availability_status
+                FROM organization_event e
+                JOIN organization_event_participant p ON p.organization_event_id = e.id
+                WHERE e.organization_id = :organizationId
+                  AND p.organization_member_id = :memberId
+                  AND tstzrange(e.start_at, e.end_at) && tstzrange(:start, :end)
+                  AND p.status IN ('ASSIGNED', 'AWAITING_ASSIGNMENT', 'INVITED', 'PENDING')
+                ORDER BY e.start_at ASC
+                """;
+
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = entityManager.createNativeQuery(sql)
+                .setParameter("organizationId", organizationId)
+                .setParameter("memberId", memberId)
+                .setParameter("start", start)
+                .setParameter("end", end)
+                .getResultList();
+
+        return rows.stream()
+                .map(row -> new MemberAvailabilityEventView(
+                        UUID.fromString(row[0].toString()),
+                        (String) row[1],
+                        DateConverter.toOffsetDateTime(row[2]),
+                        DateConverter.toOffsetDateTime(row[3]),
+                        OrganizationEventStatus.valueOf((String) row[4]),
+                        OrganizationEventParticipantStatus.valueOf((String) row[5]),
+                        OrganizationEventParticipantAvailabilityStatus.valueOf((String) row[6])
+                ))
+                .toList();
     }
 }
